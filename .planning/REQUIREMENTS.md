@@ -10,8 +10,8 @@
 - [x] **REL-01**: All network requests (IP detection + cloud API) have configurable timeouts — prevents scheduler hangs
 - [x] **REL-02**: Multi-provider IP detection with automatic fallback chain (ipinfo → icanhazip → ipify → ifconfig.me) — prevents single-provider outage
 - [x] **REL-03**: IP format validation using `ipaddress.ip_address()` before any cloud API call — prevents garbage in security group rules
-- [ ] **REL-04**: Cloud API calls have retry with exponential backoff (tenacity library) — handles rate limits and transient failures
-- [ ] **REL-05**: Security group rule update order changed to add-before-delete — prevents lockout during update failures
+- [x] **REL-04**: Cloud API calls have retry with exponential backoff (tenacity library) — handles rate limits and transient failures
+- [x] **REL-05**: Security group rule update order changed to add-before-delete — prevents lockout during update failures
 - [x] **REL-06**: `get_rules()` returns empty list `[]` on error instead of `None` — prevents rule accumulation bug
 - [x] **REL-07**: `huawei_cloud.add_rules()` wrapped in try/except — prevents unhandled exception crashing scheduler
 
@@ -73,8 +73,8 @@
 | REL-01 | Phase 1 | Complete |
 | REL-02 | Phase 1 | Complete |
 | REL-03 | Phase 1 | Complete |
-| REL-04 | Phase 1 | Pending |
-| REL-05 | Phase 1 | Pending |
+| REL-04 | Phase 1 | Complete |
+| REL-05 | Phase 1 | Complete |
 | REL-06 | Phase 1 | Complete |
 | REL-07 | Phase 1 | Complete |
 | CONF-01 | Phase 2 | Pending |

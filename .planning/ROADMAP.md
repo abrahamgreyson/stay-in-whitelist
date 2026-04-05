@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md -- IP detection: multi-provider fallback, timeout, IP validation (REL-01, REL-02, REL-03)
 - [x] 01-02-PLAN.md -- Cloud provider error handling: get_rules returns [], add_rules try/except (REL-06, REL-07)
-- [ ] 01-03-PLAN.md -- Updater: add-before-delete order + tenacity retry (REL-04, REL-05)
+- [x] 01-03-PLAN.md -- Updater: add-before-delete order + tenacity retry (REL-04, REL-05)
 
 ### Phase 2: Configuration Hardening
 **Goal**: The daemon loads config safely, uses correct file paths under systemd, and has no Pydantic deprecation warnings
