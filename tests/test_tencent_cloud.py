@@ -5,6 +5,7 @@ Date: 2024/6/25 17:07:59
 import json
 
 import pytest
+from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.vpc.v20170312 import vpc_client
 from update_whitelist.cloud_providers.tencent_cloud import TencentCloud
 
@@ -57,3 +58,15 @@ def test_delete_rules(mocker):
     tencent_cloud.client = mock_vpc_client
     tencent_cloud.delete_rules('group_id', [{'PolicyIndex': 1}])
     assert mock_vpc_client.DeleteSecurityGroupPolicies.called
+
+
+def test_get_rules_returns_empty_list_on_error(mocker):
+    """get_rules() should return [] (not None) when TencentCloudSDKException is raised"""
+    mock_vpc_client = mocker.MagicMock()
+    mock_vpc_client.DescribeSecurityGroupPolicies.side_effect = TencentCloudSDKException("test error")
+    mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
+    tencent_cloud = TencentCloud('access_key', 'secret_key', 'region')
+    tencent_cloud.client = mock_vpc_client
+    result = tencent_cloud.get_rules('group_id')
+    assert result == []
+    assert result is not None
