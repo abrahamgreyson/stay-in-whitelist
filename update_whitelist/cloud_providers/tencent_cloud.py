@@ -31,6 +31,7 @@ class TencentCloud(BaseCloudProvider):
             return filtered_rules
         except TencentCloudSDKException as err:
             BaseCloudProvider.log(err)
+            return []
 
     def add_rules(self, group_id, rules, ip):
         """ 添加安全组规则 """
