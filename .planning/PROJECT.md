@@ -27,17 +27,18 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 
 <!-- 本次重构的目标 -->
 
-- [ ] 修复 IP 检测遗漏 Bug — requests.get 无 timeout 导致挂起，APScheduler 跳过后续检查
-- [ ] 所有网络请求加 timeout（IP 探测 + 云 API 调用）
-- [ ] 云 API 调用加重试机制（指数退避），防止 rate limit 和瞬时故障
-- [ ] 安全组规则更新改为"先加后删"，避免中间断档锁死
-- [ ] 增加多个 IP 探测服务商（除 ipinfo 外增加备用提供商），支持降级容错
-- [ ] IP 返回值格式验证（防止错误 HTML 写入安全组规则）
+- ✓ IP 探测多 provider 降级链（ipinfo → icanhazip → ipify → ifconfig.me）— Phase 01
+- ✓ 网络请求 timeout 配置化（connect=3s, read=5s IP; connect=3s, read=10s cloud）— Phase 01
+- ✓ IP 返回值格式验证（ipaddress.ip_address）— Phase 01
+- ✓ 云 API 调用 tenacity 重试（3 次指数退避）— Phase 01
+- ✓ 安全组规则"先加后删"更新顺序 — Phase 01
+- ✓ get_rules 失败返回 [] 防止规则堆积 — Phase 01
+- ✓ huawei_cloud.add_rules 异常处理 — Phase 01
 - [ ] 项目重命名为 "Stay in Whitelist"（包名、类名、配置键名、注释全面更新）
 - [ ] 检查间隔改为可配置，默认 10 分钟
 - [ ] 修复路径问题（ip_cache.txt、日志文件使用绝对路径，兼容 systemd）
-- [ ] 修复 get_rules 失败返回 None 导致规则堆积的问题
-- [ ] huawei_cloud.add_rules 加异常处理
+- [ ] 修复 get_rules 失败返回 None 导致规则堆积的问题 (updater 层已修复，Phase 01)
+- [ ] huawei_cloud.add_rules 加异常处理 (已完成，Phase 01)
 - [ ] print() 调用替换为 logger
 
 ### Out of Scope
@@ -83,10 +84,10 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| 保持线性执行架构 | 当前规模（2-3 云、几个安全组）不需要异步，timeout + 重试即可获得容错能力 | — Pending |
-| 先加后删的规则更新顺序 | 避免中间断档导致用户被锁死 | — Pending |
+| 保持线性执行架构 | 当前规模（2-3 云、几个安全组）不需要异步，timeout + 重试即可获得容错能力 | — Validated Phase 01 |
+| 先加后删的规则更新顺序 | 避免中间断档导致用户被锁死 | — Validated Phase 01 |
 | 默认检查间隔 10 分钟 | 用户从 3 分钟调整为 10 分钟，减少 API 调用频率，降低 rate limit 风险 | — Pending |
-| 多 IP 探测服务商降级 | IPinfo 免费额度不足，需要备用提供商保证可用性 | — Pending |
+| 多 IP 探测服务商降级 | IPinfo 免费额度不足，需要备用提供商保证可用性 | — Validated Phase 01 |
 | 项目重命名为 Stay in Whitelist | 与目录名对齐，更准确描述功能 | — Pending |
 
 ## Evolution
@@ -107,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after initialization*
+*Last updated: 2026-04-05 after Phase 01 completion*
