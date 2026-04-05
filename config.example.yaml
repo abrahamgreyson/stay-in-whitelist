@@ -50,3 +50,12 @@ ipinfo:
   tokens:
     - token_a
     - token_b
+
+# Optional: timeout settings (defaults shown, most users don't need to change)
+# timeouts:
+#   ip_detection:
+#     connect: 3
+#     read: 5
+#   cloud_api:
+#     connect: 3
+#     read: 10
