@@ -20,9 +20,13 @@ RETRYABLE_EXCEPTIONS = (
     requests.exceptions.Timeout,
 )
 
+# Cloud provider field names in Config model (only these are iterated)
+CLOUD_PROVIDER_FIELDS = ('huawei', 'tencent', 'aliyun')
+
 
 class Updater:
-    client = None
+    def __init__(self):
+        self.client = None
 
     def update_cloud_providers(self, current_ip, config):
         """
@@ -30,25 +34,26 @@ class Updater:
         """
 
         # 遍历每个云服务提供商
-        for provider_name, provider_config in config.dict().items():
-            if provider_config is None or provider_name == 'ipinfo':
+        for provider_name in CLOUD_PROVIDER_FIELDS:
+            provider_config = getattr(config, provider_name, None)
+            if provider_config is None:
                 continue
 
             logger.info(f"更新 {provider_name}...")
-            access_key = provider_config['access_key']
-            secret_key = provider_config['secret_key']
+            access_key = provider_config.access_key
+            secret_key = provider_config.secret_key
 
             # 遍历每个区域
-            for region_config in provider_config['regions']:
-                region = region_config['region']
-                rules = region_config['rules']
+            for region_config in provider_config.regions:
+                region = region_config.region
+                rules = region_config.rules
 
                 # 遍历每个安全组
                 for rule in rules:
-                    sg = rule['sg']
-                    allows = rule['allow']
+                    sg = rule.sg
+                    allows = rule.allow
 
-                    # 我Men以安全组为单位去初始化云服务客户端
+                    # 我们以安全组为单位去初始化云服务客户端
                     self.set_client(provider_name, access_key, secret_key, region)
                     # 更新规则
                     self.update_security_group_rules(sg, allows, current_ip)
