@@ -12,6 +12,10 @@ from huaweicloudsdkvpc.v3 import VpcClient, ListSecurityGroupRulesRequest, Delet
 from huaweicloudsdkvpc.v3.region.vpc_region import VpcRegion
 from huaweicloudsdkcore.exceptions import exceptions
 
+from update_whitelist.logger import get_logger
+
+logger = get_logger()
+
 
 class HuaweiCloud(BaseCloudProvider):
 
@@ -32,22 +36,25 @@ class HuaweiCloud(BaseCloudProvider):
 
     def add_rules(self, group_id, rules, ip):
         """ 批量添加规则 """
-        request = BatchCreateSecurityGroupRulesRequest()
-        request.security_group_id = group_id
-        rules_body = [
-            BatchCreateSecurityGroupRulesOption(
-                description=f"from Wulihe{' - ' + rule['desc'] if rule.get('desc') else ''}",
-                direction="ingress",
-                protocol="tcp",
-                multiport=str(rule['port']),
-                remote_ip_prefix=str(ip)
-            ) for rule in rules
-        ]
-        request.body = BatchCreateSecurityGroupRulesRequestBody(
-            security_group_rules=rules_body
-        )
-        response = self.client.batch_create_security_group_rules(request)
-        print(response)
+        try:
+            request = BatchCreateSecurityGroupRulesRequest()
+            request.security_group_id = group_id
+            rules_body = [
+                BatchCreateSecurityGroupRulesOption(
+                    description=f"from Wulihe{' - ' + rule['desc'] if rule.get('desc') else ''}",
+                    direction="ingress",
+                    protocol="tcp",
+                    multiport=str(rule['port']),
+                    remote_ip_prefix=str(ip)
+                ) for rule in rules
+            ]
+            request.body = BatchCreateSecurityGroupRulesRequestBody(
+                security_group_rules=rules_body
+            )
+            response = self.client.batch_create_security_group_rules(request)
+            logger.info(f"Added {len(rules)} rules to {group_id}")
+        except exceptions.ClientRequestException as e:
+            BaseCloudProvider.log(e)
 
     def initialize_client(self):
         """ 初始化客户端 """
@@ -80,3 +87,5 @@ class HuaweiCloud(BaseCloudProvider):
 
         except exceptions.ClientRequestException as e:
             BaseCloudProvider.log(e)
+            return []
+
