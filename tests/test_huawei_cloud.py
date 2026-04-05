@@ -3,6 +3,7 @@ Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/25 16:31:45
 """
 from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from huaweicloudsdkcore.exceptions import exceptions
 from huaweicloudsdkvpc.v3 import VpcClient
 from update_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
 
@@ -63,3 +64,34 @@ def test_add_rules(mocker):
     huawei_cloud.client = mock_vpc_client
     huawei_cloud.add_rules('group_id', [{'port': 80, 'desc': 'test'}], '127.0.0.1')
     mock_vpc_client.batch_create_security_group_rules.assert_called_once()
+
+
+def test_get_rules_returns_empty_list_on_error(mocker):
+    """get_rules() should return [] (not None) when ClientRequestException is raised"""
+    from huaweicloudsdkcore.exceptions.exceptions import SdkError
+    mock_vpc_client = mocker.MagicMock()
+    mock_vpc_client.list_security_group_rules.side_effect = exceptions.ClientRequestException(
+        500, SdkError(request_id="test", error_code="test", error_msg="test error")
+    )
+    mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
+    huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
+    huawei_cloud.client = mock_vpc_client
+    result = huawei_cloud.get_rules('group_id')
+    assert result == []
+    assert result is not None
+
+
+def test_add_rules_catches_exception(mocker):
+    """add_rules() should catch ClientRequestException and log it without crashing"""
+    from huaweicloudsdkcore.exceptions.exceptions import SdkError
+    mock_vpc_client = mocker.MagicMock()
+    mock_vpc_client.batch_create_security_group_rules.side_effect = exceptions.ClientRequestException(
+        500, SdkError(request_id="test", error_code="test", error_msg="test error")
+    )
+    mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
+    mock_log = mocker.patch('update_whitelist.cloud_providers.huawei_cloud.BaseCloudProvider.log')
+    huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
+    huawei_cloud.client = mock_vpc_client
+    # Should NOT raise -- exception is caught internally
+    huawei_cloud.add_rules('group_id', [{'port': 80, 'desc': 'test'}], '127.0.0.1')
+    mock_log.assert_called_once()
