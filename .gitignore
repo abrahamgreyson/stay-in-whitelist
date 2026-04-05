@@ -1,5 +1,7 @@
 .idea/
 venv/
+.venv/
+uv.lock
 config.yaml
 __pycache__/
 ip_cache.txt
@@ -9,4 +11,4 @@ update_whitelist.log*
 coverage.xml
 report.xml
 # Generated version file
-update_whitelist/_version.py
+update_whitelist/_version.py.planning/
