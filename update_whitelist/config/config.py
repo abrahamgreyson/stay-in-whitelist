@@ -37,11 +37,27 @@ class IPInfo(BaseModel):
     tokens: list[str]  
 
 
+class IPDetectionTimeout(BaseModel):
+    connect: int = 3  # seconds
+    read: int = 5     # seconds
+
+
+class CloudAPITimeout(BaseModel):
+    connect: int = 3  # seconds
+    read: int = 10    # seconds
+
+
+class TimeoutSettings(BaseModel):
+    ip_detection: IPDetectionTimeout = IPDetectionTimeout()
+    cloud_api: CloudAPITimeout = CloudAPITimeout()
+
+
 class Config(BaseModel):
     huawei: Optional[CloudProvider] = None
     tencent: Optional[CloudProvider] = None
     aliyun: Optional[CloudProvider] = None
     ipinfo: Optional[IPInfo] = None
+    timeouts: TimeoutSettings = TimeoutSettings()
 
 
 # 读配置文件
