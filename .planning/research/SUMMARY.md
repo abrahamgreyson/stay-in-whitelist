@@ -9,9 +9,9 @@
 
 Stay in Whitelist is a single-process Python daemon that polls for public IP changes and updates security group rules on Huawei Cloud and Tencent Cloud. It is not a web service, not a SaaS product, and not a distributed system. The dominant pattern in this space is a simple cron job or systemd service that runs a linear check cycle every few minutes. Competing tools (aws-sg-updater, daniloaz's bash script) are all single-cloud, single-provider bash or Python scripts with no resilience features. Stay in Whitelist already differentiates with multi-cloud support via a Strategy pattern provider abstraction and typed YAML config with Pydantic validation.
 
-The recommended approach is a focused refactoring that fixes five critical reliability bugs (missing timeouts, delete-before-add lockout, no IP validation, single IP provider, and `get_rules()` returning `None`), then hardens the operational foundation (absolute paths, structured logging, configurable interval). The stack stays conservative: Python 3.9+, APScheduler 3.11.x (not 4.x alpha), requests 2.32.x with timeouts, tenacity 8.x (not 9.x which drops Python 3.9), and Pydantic 2.x. No async, no task queues, no containers, no databases.
+The recommended approach is a focused refactoring organized into three phases: (1) fix five critical bugs that cause lockouts, silent hangs, and rule corruption; (2) clean up operational deployment, paths, logging, and project identity; (3) harden with health checks, idempotent operations, and production observability. The stack stays conservative: Python 3.9+, APScheduler 3.11.x (not 4.x alpha), requests 2.32.x with timeouts, tenacity 8.x (not 9.x which drops Python 3.9 support), and Pydantic 2.x. No async, no task queues, no containers, no databases.
 
-The key risk is the delete-before-add rule update ordering. If the "add new rules" API call fails after old rules are deleted, the user is locked out of all cloud services until manual console intervention. The mitigation is strict add-first-then-delete ordering with verification between the steps. The second risk is silent scheduler death: a hanging `requests.get()` without timeout causes APScheduler to skip all future checks while the process appears healthy. The mitigation is timeouts on every network call plus `misfire_grace_time=None` on the scheduler.
+The key risk is the delete-before-add rule update ordering. If the "add new rules" API call fails after old rules are deleted, the user is locked out of all cloud services until manual console intervention. The mitigation is strict add-first-then-delete ordering with verification between the steps. The second risk is silent scheduler death: a hanging `requests.get()` without timeout causes APScheduler to skip all future checks while the process appears healthy. Both are well-understood problems with clear fixes confirmed against the actual codebase.
 
 ## Key Findings
 
@@ -20,18 +20,20 @@ The key risk is the delete-before-add rule update ordering. If the "add new rule
 The stack is already mostly determined by the existing codebase. No technology changes are needed -- only version pins and one new dependency (tenacity for retry).
 
 **Core technologies:**
-- **Python >=3.9** -- Existing constraint; deployment targets may only have 3.9. Do not drop support.
-- **APScheduler 3.11.2** -- Production/stable scheduler with `BlockingScheduler` ideal for a single-purpose daemon. APScheduler 4.x is alpha (4.0.0a6) with a completely different async-first API; do not use it.
-- **requests 2.32.5** -- HTTP client for IP detection APIs. The existing missing-timeout bug is not a requests problem; it is a missing `timeout=` parameter. Add `timeout=(3.05, 10)` everywhere.
+- **Python >=3.9** -- Existing deployment constraint; do not drop 3.9 support. The ipaddress CVE-2021-29921 fix is in 3.9.5+, so ensure >=3.9.5.
+- **APScheduler 3.11.2** -- Production/stable scheduler with `BlockingScheduler` ideal for a single-purpose daemon. APScheduler 4.x is alpha (4.0.0a6 as of Apr 2025) with a completely different async-first API; do not use it.
+- **requests 2.32.5** -- HTTP client for IP detection APIs. The missing-timeout bug is not a requests problem; it is a missing `timeout=` parameter. Add `timeout=(3.05, 10)` everywhere.
 - **Pydantic 2.x (latest: 2.12.5)** -- Already in use for config models. Migrate deprecated `config.dict()` to `config.model_dump()` during refactoring.
-- **tenacity 8.5.0** -- Retry with exponential backoff for cloud API calls. **Critical: pin to `>=8.4,<9`** because tenacity 9.x requires Python >=3.10, violating the 3.9+ constraint. Use `@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=30))` on cloud SDK calls.
+- **tenacity 8.5.0** -- Retry with exponential backoff. **Critical: pin to `>=8.4,<9`** because tenacity 9.x requires Python >=3.10, violating the 3.9+ constraint. Use `@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=30))` on cloud SDK calls.
 - **PyYAML 6.0.3** -- Config file parsing. Already in use, no changes needed.
 
 **Supporting:**
-- **ipaddress (stdlib)** -- Validate IP detection responses with `ipaddress.ip_address()` before writing to security groups.
-- **pathlib (stdlib)** -- Replace `os.path` usage with `pathlib.Path` for absolute path handling; fixes systemd WorkingDirectory bug.
-- **logging (stdlib)** -- Already using `TimedRotatingFileHandler`; replace all `print()` calls with `logger.info/error`.
-- **ruff** -- Recommended replacement for flake8/black as dev dependency.
+- **ipaddress (stdlib, built-in)** -- Validate IP detection responses with `ipaddress.ip_address()` before writing to security groups. Zero-dependency, part of Python since 3.3.
+- **pathlib (stdlib, built-in)** -- Replace `os.path` usage with `pathlib.Path` for absolute path handling; fixes systemd WorkingDirectory bug.
+- **logging (stdlib, built-in)** -- Already using `TimedRotatingFileHandler`; replace all `print()` calls with `logger.info/error`.
+- **ruff** -- Recommended replacement for flake8/black as dev dependency. Single tool, very fast, Python 3.9+ compatible.
+
+**Do not use:** APScheduler 4.x (alpha), tenacity 9.x (drops Python 3.9), asyncio/aiohttp (over-engineering for 2-3 sequential HTTP calls per cycle), Celery/dramatiq (task queues for a single-process daemon), httpx (unnecessary without async need).
 
 See `.planning/research/STACK.md` for full version compatibility matrix and alternatives analysis.
 
@@ -56,6 +58,7 @@ See `.planning/research/STACK.md` for full version compatibility matrix and alte
 - Idempotent rule management (skip add if rule already exists) -- reduces unnecessary API calls
 - IP change notification via logging (old IP -> new IP, success/failure) -- visibility
 - systemd `WatchdogSec` integration -- OS-level hang detection
+- Rule cleanup on startup (detect stale rules from downtime)
 
 **Defer (v2+):**
 - Webhook notifications -- only if external alerting needed
@@ -63,7 +66,9 @@ See `.planning/research/STACK.md` for full version compatibility matrix and alte
 - IPv6 support -- only when cloud providers require it
 - Configuration hot-reload -- only if config changes frequently
 
-See `.planning/research/FEATURES.md` for full dependency graph, competitor analysis, and anti-features to avoid.
+**Anti-features to avoid:** Web UI/dashboard, async architecture, database for state, Docker deployment, multi-tenant support, secret management integration. Each adds complexity that contradicts the project's self-use, single-process daemon nature.
+
+See `.planning/research/FEATURES.md` for full dependency graph, competitor analysis, and anti-features.
 
 ### Architecture Approach
 
@@ -91,38 +96,40 @@ See `.planning/codebase/ARCHITECTURE.md` for full layer descriptions and data fl
 
 ### Critical Pitfalls
 
-1. **Delete-before-add lockout** -- Current code deletes all rules before adding new ones. If the add API call fails, security group is empty and user is locked out. Fix: add new rules first, verify success, then delete old rules.
-2. **Requests without timeout cause scheduler hang** -- `requests.get()` with no `timeout=` hangs indefinitely. APScheduler `max_instances=1` silently skips all future checks. Fix: add `timeout=(3.05, 10)` to every network call.
-3. **No IP validation before writing to security groups** -- Error pages or rate-limit messages from IP providers get written as CIDR rules. Fix: validate with `ipaddress.ip_address()` before any cloud API call.
-4. **Single IP detection provider** -- When ipinfo.io quota is exhausted, tool silently stops detecting IP changes. Fix: implement fallback chain of 3-4 providers.
-5. **`get_rules()` returns `None` on error** -- Caller uses `if existed_rules:` which is falsy for both `None` and `[]`. Rules accumulate because deletion is skipped on API failure. Fix: return `[]` on error, or re-raise exception.
+1. **Delete-before-add lockout** -- Current code deletes all rules before adding new ones. If the add API call fails, security group is empty and user is locked out. Fix: add new rules first, verify success, then delete old rules. (Confirmed: updater.py lines 46-63)
+2. **Requests without timeout cause scheduler hang** -- `requests.get()` with no `timeout=` hangs indefinitely. APScheduler `max_instances=1` silently skips all future checks. Fix: add `timeout=(3.05, 10)` to every network call. (Confirmed: ip_fetcher.py line 22)
+3. **No IP validation before writing to security groups** -- Error pages or rate-limit messages from IP providers get written as CIDR rules. Fix: validate with `ipaddress.ip_address()` before any cloud API call. (Confirmed: ip_fetcher.py)
+4. **Single IP detection provider** -- When ipinfo.io quota is exhausted, tool silently stops detecting IP changes. Fix: implement fallback chain of 3-4 providers. (Confirmed: single get_current_ip() function)
+5. **`get_rules()` returns `None` on error** -- Caller uses `if existed_rules:` which is falsy for both `None` and `[]`. Rules accumulate because deletion is skipped on API failure. Fix: return `[]` on error, or re-raise exception. (Confirmed: both cloud providers)
 
-See `.planning/research/PITFALLS.md` for full analysis including warning signs, recovery strategies, and "looks done but isn't" checklist.
+See `.planning/research/PITFALLS.md` for full analysis including warning signs, recovery strategies, and the "looks done but isn't" checklist.
 
 ## Implications for Roadmap
 
-Based on combined research, the following phase structure is recommended:
+Based on combined research, the following three-phase structure is recommended:
 
 ### Phase 1: Critical Reliability Fixes
-**Rationale:** Every pitfall in PITFALLS.md flagged as "Phase 1" is a bug that causes the tool to fail silently or destructively. These must be fixed before any other work. The feature dependency graph confirms that all P1 features depend on timeouts and IP validation being in place first.
+**Rationale:** Five pitfalls flagged as "Phase 1" in PITFALLS.md cause the tool to fail silently or destructively. The feature dependency graph confirms that all P2 features depend on timeouts and IP validation being in place first. Without timeouts, the add-before-delete fix is equally dangerous because the "add" step could hang.
 **Delivers:** A daemon that does not hang, does not lock users out, and does not write garbage to security groups.
 **Addresses:** Timeout on all requests, multi-provider IP fallback, IP validation, add-before-delete ordering, retry with backoff, `get_rules()` return fix, exception handling on `add_rules()`.
-**Avoids:** Pitfalls 1-5 (lockout, scheduler hang, invalid IP, single provider, rule accumulation).
+**Avoids:** Pitfalls 1-5 (lockout, scheduler hang, invalid IP, single provider, rule accumulation) and Pitfall 8 (APScheduler misfire configuration).
 **Uses:** tenacity 8.5.0 for retry, `ipaddress` stdlib for validation, requests timeout tuples.
-**Research flag:** Standard patterns. IP detection fallback and retry logic are well-documented. No deep research needed.
+**Research flag:** Standard patterns. No deep research needed -- retry, validation, and fallback are well-documented.
 
 ### Phase 2: Operational Hardening and Code Quality
 **Rationale:** Once the daemon is reliable, clean up the operational deployment issues (paths, logging, config) that cause problems in systemd production. These are LOW complexity but HIGH impact for day-to-day reliability.
 **Delivers:** A daemon that deploys cleanly under systemd with proper logging, configurable intervals, and absolute file paths.
-**Addresses:** Absolute file paths via pathlib, structured logging replacing print(), configurable check interval, project rename, Pydantic `model_dump()` migration, config lazy loading.
-**Avoids:** Pitfalls 6-7 (relative paths under systemd, silent death with no health check), technical debt patterns (module-level config loading, print statements).
+**Addresses:** Absolute file paths via pathlib, structured logging replacing print(), configurable check interval, project rename, Pydantic `model_dump()` migration, config lazy loading, remove dead Alibaba stub.
+**Avoids:** Pitfall 6 (relative paths under systemd), technical debt patterns (module-level config loading, print statements, hardcoded interval).
+**Uses:** `pathlib.Path` throughout, Python `logging` stdlib, Pydantic v2 API.
 **Research flag:** Standard patterns. systemd daemon best practices are well-documented.
 
 ### Phase 3: Resilience and Self-Monitoring
 **Rationale:** After the core is reliable and operationally clean, add features that make the tool self-aware of its own health. These address scenarios that happen eventually (extended downtime, repeated failures) rather than immediate bugs.
 **Delivers:** A daemon that detects its own failures, runs checks immediately on startup, avoids duplicate rules, and notifies on IP changes.
-**Addresses:** Startup immediate check, health check with consecutive failure tracking, idempotent rule management, IP change notification logging, systemd `WatchdogSec` integration.
-**Avoids:** Pitfalls 7-8 (silent death, APScheduler misconfiguration), performance traps (client reuse per provider-region).
+**Addresses:** Startup immediate check, health check with consecutive failure tracking, idempotent rule management, IP change notification logging, systemd `WatchdogSec` integration, rule cleanup on startup.
+**Avoids:** Pitfall 7 (silent death with no health check), performance traps (SDK client reuse per provider-region), security mistakes (credential exposure in logs).
+**Uses:** `sd_notify` for systemd watchdog, tenacity retry on add-rules step specifically.
 **Research flag:** Minor research needed on `sd_notify` Python integration for systemd watchdog. Pattern is documented but may need version-specific testing with the Python 3.9+ constraint.
 
 ### Phase Ordering Rationale
@@ -144,26 +151,27 @@ Based on combined research, the following phase structure is recommended:
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All version pins verified against PyPI. Python 3.9+ constraint validated against tenacity 9.x incompatibility and APScheduler 4.x alpha status. Codebase analysis confirms current usage. |
-| Features | HIGH | Feature landscape derived from 4 competitor tools, community reference implementations, and direct codebase analysis. Anti-features validated against PROJECT.md out-of-scope constraints. Dependency graph is explicit and verified. |
-| Architecture | MEDIUM | Based on codebase analysis rather than domain research. The existing architecture is sound but the research ARCHITECTURE.md file was not generated. Confidence based on codebase analysis files in `.planning/codebase/`. |
-| Pitfalls | HIGH | All 5 critical pitfalls confirmed against actual source code (specific line references). Recovery strategies derived from community reports (APScheduler GitHub issues, Stack Overflow systemd answers) and official vendor docs. |
+| Stack | HIGH | All version pins verified against PyPI metadata. Python 3.9+ constraint validated against tenacity 9.x incompatibility (requires >=3.10) and APScheduler 4.x alpha status (4.0.0a6). Vendor SDKs have no alternatives. Sources: PyPI, codebase pyproject.toml. |
+| Features | HIGH | 11 P1 features derived from 4 competitor tools, community reference implementations, and direct codebase bug analysis. Anti-features validated against PROJECT.md out-of-scope constraints. Dependency graph is explicit and verified. |
+| Architecture | MEDIUM | The research ARCHITECTURE.md file was not generated by the researcher. Confidence is based on the codebase analysis in `.planning/codebase/ARCHITECTURE.md` which provides adequate layer descriptions and data flow. The existing Strategy pattern and layered design are sound. Gap: no research on whether IP detection providers should also use Strategy pattern or simpler list-of-callables approach. |
+| Pitfalls | HIGH | All 5 critical pitfalls confirmed against actual source code with line references. 3 additional operational pitfalls documented with systemd-specific guidance. Recovery strategies derived from APScheduler GitHub issues, Stack Overflow answers, and vendor docs. The "looks done but isn't" checklist catches common shortcuts. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Architecture research file missing:** The research ARCHITECTURE.md was not generated by the researcher. The codebase architecture analysis in `.planning/codebase/ARCHITECTURE.md` fills this gap adequately for roadmap purposes, but the roadmapper should reference it directly. The existing layer structure (scheduler, IP detection, updater, cloud providers, config) is well-understood from codebase analysis.
-- **Cloud SDK timeout configuration:** Research did not conclusively determine whether Huawei Cloud SDK and Tencent Cloud SDK client constructors accept timeout parameters. The STACK.md notes Huawei SDK has `connect_timeout` / `read_timeout` but this needs verification during implementation. Plan to test this in Phase 1.
+- **Architecture research file missing:** The research ARCHITECTURE.md was not generated. The codebase architecture analysis in `.planning/codebase/ARCHITECTURE.md` fills this gap adequately for roadmap purposes, but the roadmapper should reference it directly rather than expecting a research version.
+- **Cloud SDK timeout configuration:** Research did not conclusively determine whether Huawei Cloud SDK and Tencent Cloud SDK client constructors accept timeout parameters. The STACK.md notes Huawei SDK has `connect_timeout` / `read_timeout` but this needs verification during Phase 1 implementation.
 - **Tenacity integration with vendor SDK methods:** The retry decorator pattern with tenacity is well-documented for `requests` calls, but applying it to Huawei/Tencent SDK methods (which raise vendor-specific exceptions) needs the `retry_if_exception_type` parameter tuned per provider. Address during Phase 1 implementation.
+- **IP detection provider availability:** The recommended 4-provider fallback chain (ipinfo, icanhazip, ipify, checkip.amazonaws.com) needs live verification at implementation time. Rate limits, response formats, and uptime may have changed.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- PyPI version data: APScheduler 3.11.2, tenacity 8.5.0/9.1.4, requests 2.32.5, Pydantic 2.12.5, PyYAML 6.0.3
+- PyPI version data: APScheduler 3.11.2 (released 2025-12-22), tenacity 8.5.0 / 9.1.4, requests 2.32.5, Pydantic 2.12.5, PyYAML 6.0.3
 - APScheduler 3.x User Guide (readthedocs) -- scheduler configuration, misfire handling, coalesce behavior
 - Python stdlib docs: `ipaddress`, `pathlib`, `logging` -- validation, path handling, structured logging
-- Codebase analysis: `.planning/codebase/ARCHITECTURE.md`, `.planning/codebase/STRUCTURE.md`, source files in `update_whitelist/`
+- Codebase analysis: `.planning/codebase/ARCHITECTURE.md`, `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONCERNS.md`
 - Project requirements: `.planning/PROJECT.md`
 
 ### Secondary (MEDIUM confidence)
@@ -172,12 +180,14 @@ Based on combined research, the following phase structure is recommended:
 - systemd watchdog with Python (stigok.net) -- `sd_notify` integration pattern
 - systemd RestartSec and WatchdogSec guide (OneUptime) -- service reliability directives
 - Huawei Cloud API rate limiting docs -- exponential backoff recommendation
+- Huawei Cloud VPC security group limits -- 120 rules per SG, 500 total per account
 - Competitor tools: aws-sg-updater (GitHub), daniloaz bash script, aws-ipupdater -- feature benchmarking
+- CVE-2021-29921 (NVD) -- Python ipaddress validation bypass, fixed in 3.9.5
 
 ### Tertiary (LOW confidence)
 - IPSpot multi-provider fallback library (GitHub) -- reference for fallback chain implementation pattern
 - Reddit: Python requests hanging despite timeout -- community reports of edge cases
-- CVE-2021-29921 (NVD) -- ipaddress validation bypass fixed in Python 3.9.5
+- Blog posts on systemd + Python daemon patterns -- general guidance
 
 ---
 *Research completed: 2026-04-05*
