@@ -3,11 +3,22 @@ Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/13 13:45:50
 """
 
+import logging
+
+import requests
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
+
 from .cloud_providers.tencent_cloud import TencentCloud
 from .cloud_providers.huawei_cloud import HuaweiCloud
 from .logger import get_logger
 
 logger = get_logger()
+
+# Retryable exceptions -- network level only per D-10, D-11
+RETRYABLE_EXCEPTIONS = (
+    requests.exceptions.ConnectionError,
+    requests.exceptions.Timeout,
+)
 
 
 class Updater:
@@ -46,30 +57,23 @@ class Updater:
     def update_security_group_rules(self, sg, rules, ip):
         """
         更新安全组规则
-        我们读出安全组规则，然后根据备注，把符合条件的全部删除，然后重新添加
+        Per D-13: add new rules FIRST, then delete old rules.
+        This ensures no lockout window during the update.
         """
         logger.info(f"获取安全组 {sg} 的规则...")
         existed_rules = self.fetch_security_group_rules(sg)
+
+        # ADD new rules FIRST (D-13)
+        logger.info(f"添加安全组 {sg} 的规则...")
+        self._call_with_retry(self.client.add_rules, sg, rules, ip)
+
+        # DELETE old rules SECOND (only after new rules are in place)
         if existed_rules:
-            # 删除所有规则
             logger.info(f"有符合条件的规则，删除安全组 {sg} 的所有规则...")
-            self.client.delete_rules(sg, existed_rules)
-            pass
+            self._call_with_retry(self.client.delete_rules, sg, existed_rules)
         else:
             logger.info(f"安全组 {sg} 没有符合条件的规则，跳过删除...")
-            pass
-        # 删完了就按照配置文件再加进去
-        logger.info(f"添加安全组 {sg} 的规则...")
-        self.client.add_rules(sg, rules, ip)
 
-        # 遍历每个 allow
-        # for allow in allows:
-        #     port = allow['port']
-        #
-        #     print(f"Allow Port: {port}")
-        #
-        #     # 调用 provider 的更新方法，添加当前 IP 和端口规则
-        #     print(f"更新安全组 {sg}，添加 IP {current_ip} 和端口 {port}...")
         return None
 
     def set_client(self, provider_name, access_key, secret_key, region) -> None:
@@ -94,9 +98,19 @@ class Updater:
             # 调用相应云服务的方法获取安全组规则
             rules = self.client.get_rules(sg)
             logger.info(f"成功获取安全组 {sg} 的规则")
-            print(rules)
             return rules
 
         except Exception as e:
             logger.error(f"获取 {sg} 安全组规则时出错: {str(e)}")
-            return None
+            return []
+
+    def _call_with_retry(self, fn, *args, **kwargs):
+        """Execute a cloud API call with retry on transient network errors per D-09."""
+        retry_decorator = retry(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=1, min=1, max=10),
+            retry=retry_if_exception_type(RETRYABLE_EXCEPTIONS),
+            before_sleep=before_sleep_log(logger, logging.WARNING),
+            reraise=True,
+        )
+        return retry_decorator(fn)(*args, **kwargs)
