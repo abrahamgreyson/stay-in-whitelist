@@ -5,39 +5,80 @@ Date: 2024/6/25 12:14:39
 
 import pytest
 import requests
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, patch, call, MagicMock
 from update_whitelist.updater import Updater
 from update_whitelist.cloud_providers.tencent_cloud import TencentCloud
 from update_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
+from update_whitelist.config.config import Config, CloudProvider, Region, Rule, Allow
 
 
-def test_update_cloud_providers(mocker):
+def test_client_is_instance_variable():
+    """Two Updater instances must NOT share client state."""
+    u1 = Updater()
+    u2 = Updater()
+    u1.client = "something"
+    assert u2.client is None
+
+
+def test_update_cloud_providers_uses_attributes(mocker):
+    """update_cloud_providers iterates Pydantic Config attributes, not dict."""
     mocker.patch.object(Updater, 'set_client')
     mocker.patch.object(Updater, 'update_security_group_rules')
     updater = Updater()
-    config = {
-        'tencent': {
-            'access_key': 'key1',
-            'secret_key': 'secret1',
-            'regions': [
-                {
-                    'region': 'region1',
-                    'rules': [
-                        {
-                            'sg': 'sg1',
-                            'allow': ['allow1']
-                        }
-                    ]
-                }
-            ]
-        }
-    }
-    # 创建一个 MagicMock 对象，并设置其 .dict() 方法返回 config
-    config_mock = mocker.MagicMock()
-    config_mock.dict.return_value = config
-    updater.update_cloud_providers('127.0.0.1', config_mock)
+    config = Config(
+        tencent=CloudProvider(
+            access_key='key1',
+            secret_key='secret1',
+            regions=[Region(
+                region='region1',
+                rules=[Rule(sg='sg1', allow=[Allow(port=80, desc='http')])]
+            )]
+        )
+    )
+    updater.update_cloud_providers('127.0.0.1', config)
     updater.set_client.assert_called_once_with('tencent', 'key1', 'secret1', 'region1')
-    updater.update_security_group_rules.assert_called_once_with('sg1', ['allow1'], '127.0.0.1')
+    updater.update_security_group_rules.assert_called_once_with('sg1', config.tencent.regions[0].rules[0].allow, '127.0.0.1')
+
+
+def test_update_cloud_providers_skips_none_providers(mocker):
+    """Providers set to None are skipped."""
+    mocker.patch.object(Updater, 'set_client')
+    mocker.patch.object(Updater, 'update_security_group_rules')
+    updater = Updater()
+    config = Config(
+        huawei=CloudProvider(
+            access_key='hk1',
+            secret_key='hs1',
+            regions=[Region(
+                region='cn-north',
+                rules=[Rule(sg='sg-h', allow=[Allow(port=22)])]
+            )]
+        )
+        # tencent and aliyun are None by default
+    )
+    updater.update_cloud_providers('1.2.3.4', config)
+    updater.set_client.assert_called_once_with('huawei', 'hk1', 'hs1', 'cn-north')
+
+
+def test_update_cloud_providers_skips_non_provider_fields(mocker):
+    """Non-provider fields like ipinfo, timeouts are not iterated as providers."""
+    mocker.patch.object(Updater, 'set_client')
+    mocker.patch.object(Updater, 'update_security_group_rules')
+    updater = Updater()
+    config = Config(
+        tencent=CloudProvider(
+            access_key='tk',
+            secret_key='ts',
+            regions=[Region(
+                region='ap-guangzhou',
+                rules=[Rule(sg='sg-t', allow=[Allow(port=443)])]
+            )]
+        )
+    )
+    updater.update_cloud_providers('10.0.0.1', config)
+    # Only tencent should be called, not ipinfo/timeouts
+    assert updater.set_client.call_count == 1
+    updater.set_client.assert_called_once_with('tencent', 'tk', 'ts', 'ap-guangzhou')
 
 
 def test_update_security_group_rules_with_existed_rules(mocker):
