@@ -12,7 +12,7 @@ This roadmap transforms Stay in Whitelist from a working-but-fragile daemon into
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Critical Reliability** - Fix the five bugs that cause hangs, lockouts, and garbage in security groups
+- [x] **Phase 1: Critical Reliability** - Fix the five bugs that cause hangs, lockouts, and garbage in security groups
 - [ ] **Phase 2: Configuration Hardening** - Fix config loading, file paths, Pydantic API, and shared-state bug
 - [ ] **Phase 3: Code Quality** - Replace print with logger, remove dead code, fix build artifacts
 - [ ] **Phase 4: Project Identity** - Rename package, update branding, add configurable rule prefix for dev/prod isolation
@@ -47,12 +47,12 @@ Plans:
   3. Importing the config module does not trigger file I/O -- config loads only when explicitly initialized
   4. No Pydantic deprecation warnings appear during config usage (model_dump replaces dict)
   5. The Updater's cloud client is an instance variable, not shared across instances via class variable
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md -- Config model rewrite: load_config(), Paths, check_interval, conftest fixture (CONF-01, CONF-02, CONF-03)
+- [x] 02-02-PLAN.md -- Updater fix: instance variable + attribute iteration, remove .dict() (CONF-04, QUAL-04)
+- [ ] 02-03-PLAN.md -- Integration: main.py rewrite, ip_fetcher config injection, logger reconfigure, test migration (CONF-01, CONF-02, CONF-03)
 
 ### Phase 3: Code Quality
 **Goal**: All output goes through structured logging, dead code is removed, and the build toolchain works cleanly
@@ -108,8 +108,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Critical Reliability | 0/3 | Not started | - |
-| 2. Configuration Hardening | 0/3 | Not started | - |
+| 1. Critical Reliability | 3/3 | Complete | 2026-04-05 |
+| 2. Configuration Hardening | 0/3 | Planning complete | - |
 | 3. Code Quality | 0/2 | Not started | - |
 | 4. Project Identity | 0/3 | Not started | - |
 | 5. Operational Deployment | 0/2 | Not started | - |

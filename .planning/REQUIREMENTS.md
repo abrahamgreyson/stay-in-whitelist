@@ -20,14 +20,14 @@
 - [ ] **CONF-01**: Check interval is configurable via `config.yaml` with default of 600 seconds (10 minutes)
 - [ ] **CONF-02**: File paths (ip_cache, log file) use absolute paths resolved via `pathlib` — fixes systemd deployment
 - [ ] **CONF-03**: Config loading deferred to explicit initialization function (not module-level side effect) — improves testability
-- [ ] **CONF-04**: `config.dict()` migrated to `config.model_dump()` — Pydantic v2 API compatibility
+- [x] **CONF-04**: `config.dict()` migrated to `config.model_dump()` — Pydantic v2 API compatibility
 
 ### Code Quality (QUAL)
 
 - [ ] **QUAL-01**: All `print()` calls replaced with `logger` calls — ensures all output goes through log rotation
 - [ ] **QUAL-02**: Logger does not expose API tokens in log messages — prevents credential leakage
 - [ ] **QUAL-03**: Commented-out dead code in `updater.py` removed — reduces confusion
-- [ ] **QUAL-04**: `Updater.client` moved from class variable to instance variable — fixes latent shared state bug
+- [x] **QUAL-04**: `Updater.client` moved from class variable to instance variable — fixes latent shared state bug
 - [ ] **QUAL-05**: Unused `config_loader.py` module removed — eliminates dead code
 - [ ] **QUAL-06**: `requirements.dev.txt` trailing quote character fixed — fixes pip install failure
 
@@ -80,8 +80,8 @@
 | CONF-01 | Phase 2 | Pending |
 | CONF-02 | Phase 2 | Pending |
 | CONF-03 | Phase 2 | Pending |
-| CONF-04 | Phase 2 | Pending |
-| QUAL-04 | Phase 2 | Pending |
+| CONF-04 | Phase 2 | Complete |
+| QUAL-04 | Phase 2 | Complete |
 | QUAL-01 | Phase 3 | Pending |
 | QUAL-02 | Phase 3 | Pending |
 | QUAL-03 | Phase 3 | Pending |
