@@ -35,8 +35,12 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 - ✓ get_rules 失败返回 [] 防止规则堆积 — Phase 01
 - ✓ huawei_cloud.add_rules 异常处理 — Phase 01
 - [ ] 项目重命名为 "Stay in Whitelist"（包名、类名、配置键名、注释全面更新）
-- [ ] 检查间隔改为可配置，默认 10 分钟
-- [ ] 修复路径问题（ip_cache.txt、日志文件使用绝对路径，兼容 systemd）
+- ✓ 检查间隔改为可配置，默认 600 秒 (10 分钟) — Phase 02
+- ✓ 修复路径问题（ip_cache.txt、日志文件支持绝对路径，兼容 systemd）— Phase 02
+- ✓ 模块级 config 单例移除，改为显式 load_config() — Phase 02
+- ✓ Updater client 从类变量改为实例变量 — Phase 02
+- ✓ config.dict() 替换为属性迭代，消除 Pydantic 弃用 — Phase 02
+- [ ] 项目重命名为 "Stay in Whitelist"（包名、类名、配置键名、注释全面更新）
 - [ ] 修复 get_rules 失败返回 None 导致规则堆积的问题 (updater 层已修复，Phase 01)
 - [ ] huawei_cloud.add_rules 加异常处理 (已完成，Phase 01)
 - [ ] print() 调用替换为 logger
@@ -86,7 +90,7 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 |----------|-----------|---------|
 | 保持线性执行架构 | 当前规模（2-3 云、几个安全组）不需要异步，timeout + 重试即可获得容错能力 | — Validated Phase 01 |
 | 先加后删的规则更新顺序 | 避免中间断档导致用户被锁死 | — Validated Phase 01 |
-| 默认检查间隔 10 分钟 | 用户从 3 分钟调整为 10 分钟，减少 API 调用频率，降低 rate limit 风险 | — Pending |
+| 默认检查间隔 10 分钟 | 用户从 3 分钟调整为 10 分钟，减少 API 调用频率，降低 rate limit 风险 | — Validated Phase 02 |
 | 多 IP 探测服务商降级 | IPinfo 免费额度不足，需要备用提供商保证可用性 | — Validated Phase 01 |
 | 项目重命名为 Stay in Whitelist | 与目录名对齐，更准确描述功能 | — Pending |
 
@@ -108,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after Phase 01 completion*
+*Last updated: 2026-04-06 after Phase 02 completion*
