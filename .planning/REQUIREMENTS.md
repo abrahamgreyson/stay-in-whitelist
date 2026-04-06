@@ -17,9 +17,9 @@
 
 ### Configuration (CONFIG)
 
-- [ ] **CONF-01**: Check interval is configurable via `config.yaml` with default of 600 seconds (10 minutes)
-- [ ] **CONF-02**: File paths (ip_cache, log file) use absolute paths resolved via `pathlib` — fixes systemd deployment
-- [ ] **CONF-03**: Config loading deferred to explicit initialization function (not module-level side effect) — improves testability
+- [x] **CONF-01**: Check interval is configurable via `config.yaml` with default of 600 seconds (10 minutes)
+- [x] **CONF-02**: File paths (ip_cache, log file) use absolute paths resolved via `pathlib` — fixes systemd deployment
+- [x] **CONF-03**: Config loading deferred to explicit initialization function (not module-level side effect) — improves testability
 - [x] **CONF-04**: `config.dict()` migrated to `config.model_dump()` — Pydantic v2 API compatibility
 
 ### Code Quality (QUAL)
@@ -77,9 +77,9 @@
 | REL-05 | Phase 1 | Complete |
 | REL-06 | Phase 1 | Complete |
 | REL-07 | Phase 1 | Complete |
-| CONF-01 | Phase 2 | Pending |
-| CONF-02 | Phase 2 | Pending |
-| CONF-03 | Phase 2 | Pending |
+| CONF-01 | Phase 2 | Complete |
+| CONF-02 | Phase 2 | Complete |
+| CONF-03 | Phase 2 | Complete |
 | CONF-04 | Phase 2 | Complete |
 | QUAL-04 | Phase 2 | Complete |
 | QUAL-01 | Phase 3 | Pending |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-04-05T23:55:11.587Z"
-last_activity: 2026-04-05
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-04-06T00:02:34.923Z"
+last_activity: 2026-04-06
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 02 (configuration-hardening) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-04-05
+Last activity: 2026-04-06
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 10min | 2 tasks | 4 files |
 | Phase 01 P03 | 3min | 1 tasks | 2 files |
 | Phase 02 P02 | 6min | 1 tasks | 2 files |
+| Phase 02 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Only requests.ConnectionError and requests.Timeout are retried -- SDK exceptions are caught by providers
 - [Phase 02]: CLOUD_PROVIDER_FIELDS tuple enumerates only cloud providers, skipping ipinfo/timeouts automatically
 - [Phase 02]: getattr(config, provider_name, None) for safe Pydantic attribute access without dict conversion
+- [Phase 02]: Removed module-level config singleton entirely, replaced with explicit load_config() function
+- [Phase 02]: check_interval minimum 600s enforced via Pydantic field_validator
+- [Phase 02]: Paths model uses Optional[str]=None defaults for ip_cache and log_file
 
 ### Pending Todos
 
@@ -86,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T23:55:11.585Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-04-06T00:02:34.921Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
