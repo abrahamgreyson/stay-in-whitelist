@@ -10,6 +10,10 @@ from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.vpc.v20170312 import vpc_client, models
 
+from update_whitelist.logger import get_logger
+
+logger = get_logger()
+
 
 class TencentCloud(BaseCloudProvider):
     def get_rules(self, group_id):
@@ -53,7 +57,7 @@ class TencentCloud(BaseCloudProvider):
             }
             req.from_json_string(json.dumps(params))
             resp = self.client.CreateSecurityGroupPolicies(req)
-            print(resp.to_json_string())
+            logger.debug(resp.to_json_string())
             # 输出json格式的字符串回包
         except TencentCloudSDKException as err:
             BaseCloudProvider.log(err)
@@ -75,7 +79,7 @@ class TencentCloud(BaseCloudProvider):
             }
             req.from_json_string(json.dumps(params))
             resp = self.client.DeleteSecurityGroupPolicies(req)
-            print(resp.to_json_string())
+            logger.debug(resp.to_json_string())
         except TencentCloudSDKException as err:
             BaseCloudProvider.log(err)
 

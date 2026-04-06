@@ -66,10 +66,10 @@ def main():
     try:
         config = load_config()
     except (FileNotFoundError, ValueError) as e:
-        print(f"配置加载失败: {e}")
+        logger.error(f"配置加载失败: {e}")
         return
     except Exception as e:
-        print(f"配置加载出错: {e}")
+        logger.error(f"配置加载出错: {e}")
         return
 
     # Reconfigure logger if custom log path specified
