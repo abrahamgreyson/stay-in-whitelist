@@ -64,11 +64,11 @@ Plans:
   3. Commented-out dead code in updater.py is removed -- the file contains only active logic
   4. The unused config_loader.py module no longer exists in the codebase
   5. `pip install -r requirements.dev.txt` succeeds without errors (trailing quote character fixed)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [x] 03-01-PLAN.md -- Replace print() with logger calls, audit credential leakage (QUAL-01, QUAL-02)
+- [x] 03-02-PLAN.md -- Delete config_loader.py, verify updater.py clean, fix requirements.dev.txt (QUAL-03, QUAL-05, QUAL-06)
 
 ### Phase 4: Project Identity
 **Goal**: The project is consistently named "Stay in Whitelist" everywhere, with a configurable rule prefix that isolates dev and prod environments
@@ -110,6 +110,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Critical Reliability | 3/3 | Complete | 2026-04-05 |
 | 2. Configuration Hardening | 0/3 | Planning complete | - |
-| 3. Code Quality | 0/2 | Not started | - |
+| 3. Code Quality | 0/2 | Planning complete | - |
 | 4. Project Identity | 0/3 | Not started | - |
 | 5. Operational Deployment | 0/2 | Not started | - |

@@ -26,10 +26,10 @@
 
 - [ ] **QUAL-01**: All `print()` calls replaced with `logger` calls — ensures all output goes through log rotation
 - [ ] **QUAL-02**: Logger does not expose API tokens in log messages — prevents credential leakage
-- [ ] **QUAL-03**: Commented-out dead code in `updater.py` removed — reduces confusion
+- [x] **QUAL-03**: Commented-out dead code in `updater.py` removed — reduces confusion
 - [x] **QUAL-04**: `Updater.client` moved from class variable to instance variable — fixes latent shared state bug
-- [ ] **QUAL-05**: Unused `config_loader.py` module removed — eliminates dead code
-- [ ] **QUAL-06**: `requirements.dev.txt` trailing quote character fixed — fixes pip install failure
+- [x] **QUAL-05**: Unused `config_loader.py` module removed — eliminates dead code
+- [x] **QUAL-06**: `requirements.dev.txt` trailing quote character fixed — fixes pip install failure
 
 ### Project Identity (IDENT)
 
@@ -84,9 +84,9 @@
 | QUAL-04 | Phase 2 | Complete |
 | QUAL-01 | Phase 3 | Pending |
 | QUAL-02 | Phase 3 | Pending |
-| QUAL-03 | Phase 3 | Pending |
-| QUAL-05 | Phase 3 | Pending |
-| QUAL-06 | Phase 3 | Pending |
+| QUAL-03 | Phase 3 | Complete |
+| QUAL-05 | Phase 3 | Complete |
+| QUAL-06 | Phase 3 | Complete |
 | IDENT-01 | Phase 4 | Pending |
 | IDENT-02 | Phase 4 | Pending |
 | IDENT-03 | Phase 4 | Pending |
