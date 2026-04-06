@@ -51,6 +51,14 @@ ipinfo:
     - token_a
     - token_b
 
+# Optional: check interval in seconds (default: 600, minimum: 600)
+# check_interval: 600
+
+# Optional: file paths (defaults to same directory as config.yaml)
+# paths:
+#   ip_cache: /var/lib/stay-in-whitelist/ip_cache.txt
+#   log_file: /var/log/stay-in-whitelist/update_whitelist.log
+
 # Optional: timeout settings (defaults shown, most users don't need to change)
 # timeouts:
 #   ip_detection:
