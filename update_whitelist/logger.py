@@ -36,3 +36,21 @@ def get_logger(name=__name__):
         logger.addHandler(fh)
 
     return logger
+
+
+def reconfigure_logging(log_file_path: str) -> None:
+    """
+    Replace TimedRotatingFileHandler with new path. Safe to call multiple times.
+    Called after load_config() if config.paths.log_file is specified.
+    """
+    for name in logging.root.manager.loggerDict:
+        log = logging.getLogger(name)
+        old_handlers = [h for h in log.handlers if isinstance(h, TimedRotatingFileHandler)]
+        for h in old_handlers:
+            h.close()
+            log.removeHandler(h)
+        if old_handlers:
+            fh = TimedRotatingFileHandler(log_file_path, when='H', interval=24, backupCount=7)
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+            log.addHandler(fh)

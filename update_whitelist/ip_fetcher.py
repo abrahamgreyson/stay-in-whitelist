@@ -6,9 +6,7 @@ import ipaddress
 import requests
 import os
 from .logger import get_logger
-from .config.config import config
 
-IP_CACHE_FILE = 'ip_cache.txt'
 logger = get_logger()
 
 IP_PROVIDERS = [
@@ -35,7 +33,7 @@ IP_PROVIDERS = [
 ]
 
 
-def get_current_ip():
+def get_current_ip(config):
     """
     Try IP detection providers in order, return first valid IP.
     Sequential fallback chain: ipinfo -> icanhazip -> ipify -> ifconfig.me
@@ -73,19 +71,21 @@ def get_current_ip():
     return None
 
 
-def load_cached_ip():
+def load_cached_ip(config):
     """
     读取缓存的 IP 地址
     """
-    if os.path.exists(IP_CACHE_FILE):
-        with open(IP_CACHE_FILE, 'r') as file:
+    cache_path = config.paths.ip_cache or 'ip_cache.txt'
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as file:
             return file.read().strip()
     return None
 
 
-def cache_ip(ip):
+def cache_ip(ip, config):
     """
     缓存当前 IP 地址
     """
-    with open(IP_CACHE_FILE, 'w') as file:
+    cache_path = config.paths.ip_cache or 'ip_cache.txt'
+    with open(cache_path, 'w') as file:
         file.write(ip)
