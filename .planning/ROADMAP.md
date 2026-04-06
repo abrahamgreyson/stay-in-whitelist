@@ -52,7 +52,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md -- Config model rewrite: load_config(), Paths, check_interval, conftest fixture (CONF-01, CONF-02, CONF-03)
 - [x] 02-02-PLAN.md -- Updater fix: instance variable + attribute iteration, remove .dict() (CONF-04, QUAL-04)
-- [ ] 02-03-PLAN.md -- Integration: main.py rewrite, ip_fetcher config injection, logger reconfigure, test migration (CONF-01, CONF-02, CONF-03)
+- [x] 02-03-PLAN.md -- Integration: main.py rewrite, ip_fetcher config injection, logger reconfigure, test migration (CONF-01, CONF-02, CONF-03)
 
 ### Phase 3: Code Quality
 **Goal**: All output goes through structured logging, dead code is removed, and the build toolchain works cleanly
