@@ -24,8 +24,8 @@
 
 ### Code Quality (QUAL)
 
-- [ ] **QUAL-01**: All `print()` calls replaced with `logger` calls — ensures all output goes through log rotation
-- [ ] **QUAL-02**: Logger does not expose API tokens in log messages — prevents credential leakage
+- [x] **QUAL-01**: All `print()` calls replaced with `logger` calls — ensures all output goes through log rotation
+- [x] **QUAL-02**: Logger does not expose API tokens in log messages — prevents credential leakage
 - [x] **QUAL-03**: Commented-out dead code in `updater.py` removed — reduces confusion
 - [x] **QUAL-04**: `Updater.client` moved from class variable to instance variable — fixes latent shared state bug
 - [x] **QUAL-05**: Unused `config_loader.py` module removed — eliminates dead code
@@ -82,8 +82,8 @@
 | CONF-03 | Phase 2 | Complete |
 | CONF-04 | Phase 2 | Complete |
 | QUAL-04 | Phase 2 | Complete |
-| QUAL-01 | Phase 3 | Pending |
-| QUAL-02 | Phase 3 | Pending |
+| QUAL-01 | Phase 3 | Complete |
+| QUAL-02 | Phase 3 | Complete |
 | QUAL-03 | Phase 3 | Complete |
 | QUAL-05 | Phase 3 | Complete |
 | QUAL-06 | Phase 3 | Complete |
