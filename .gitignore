@@ -5,10 +5,10 @@ uv.lock
 config.yaml
 __pycache__/
 ip_cache.txt
-update_whitelist.log*
+stay_in_whitelist.log*
 .coverage
 *.egg-info
 coverage.xml
 report.xml
 # Generated version file
-update_whitelist/_version.py.planning/
+stay_in_whitelist/_version.py

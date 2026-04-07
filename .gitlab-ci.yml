@@ -26,7 +26,7 @@ install-deps:
   artifacts:
     paths:
       - $VENV_PATH
-      - update_whitelist/_version.py
+      - stay_in_whitelist/_version.py
     expire_in: 1 hour
 
 test:
@@ -37,7 +37,7 @@ test:
     - pip list
     - which pytest
     - pytest --version
-    - pytest tests/ --cov=update_whitelist --junitxml=report.xml --cov-report=xml --cov-report=term
+    - pytest tests/ --cov=stay_in_whitelist --junitxml=report.xml --cov-report=xml --cov-report=term
   artifacts:
     reports:
       coverage_report:
