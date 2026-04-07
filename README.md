@@ -1,81 +1,64 @@
-# 定时更新云服务安全组规则
+# Stay in Whitelist
 
 [![License](https://img.shields.io/github/license/abrahamgreyson/update-whitelist.svg?)](https://opensource.org/license/mit)
 [![CodeFactor](https://www.codefactor.io/repository/github/abrahamgreyson/update-whitelist/badge)](https://www.codefactor.io/repository/github/abrahamgreyson/update-whitelist)
 [![Test](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml/badge.svg)](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml)
 [![Codecov](https://codecov.io/gh/abrahamgreyson/update-whitelist/branch/main/graph/badge.svg?token=Fc4MbBmMpZ)](https://codecov.io/gh/abrahamgreyson/update-whitelist?branch=main)
 [![Python versions](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12-blue)](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml)
-[![Views](https://komarev.com/ghpvc/?username=abe-update-whitelist&color=green&label=views)](https://komarev.com/ghpvc/)
 
-这个工具旨在在缺乏堡垒机的情况下，对在线服务器放行本地 ip，免得长期暴露敏感端口。它会定时（每 3 分钟）获取本地的外网 ip，更新到云服务器的安全组白名单（目前支持腾讯云、华为云，其它云请参考本页末尾的“扩展”部分）。
-支持多个云，每个云支持多个 region，每个 region 支持多个安全组，每个安全组支持多个端口的放行。
+定时检测本地公网 IP 变化，自动更新云服务安全组白名单。
 
-## 部署
+在没有堡垒机的情况下，避免长期暴露数据库、应用端口等敏感端口。部署为 systemd 服务长期运行，IP 变了白名单自动跟上 -- 不漏更、不挂死、不锁死。
 
-1. 支持 `3.9` - `3.12`
-2. 克隆项目，安装依赖 `pip install -r requirements.txt`
-3. 复制模板配置文件 `config.example.yaml` 到 `config.yaml`，按需配置（请看下一节配置章节）
-4. 运行
+## 功能特性
 
-  ```bash
-   # 调试模式运行，带有 stdout
-   python main.py
-   
-   # 后台运行、丢弃任何输出（活着使用 screen 活 tmux 工具能达到同样效果）
-   nohup python main.py > /dev/null 2>&1 &
-      
-   # 验证是否执行
-   ps aux | grep python
-   
-   # 重要服务，建议新建 systemd 服务单元，可以保证开机启动，也更好使用 systemctl 管理
-   # 新建服务单元配置
-   sudo vim /etc/systemd/system/whitelist.service
-   # 文件添加下个代码段的内容👇 ， 按需更改其中路径
-   
-   # 重新加载 systemd 配置
-   sudo systemctl daemon-reload
-   # 启动服务
-   sudo systemctl start whitelist
-   # 开机自启
-   sudo systemctl enable whitelist
-   # 检查状态 
-   sudo systemctl status whitelist
-   ```
+- **多云支持** -- 华为云、腾讯云，可扩展其他云服务
+- **多层级配置** -- 每个云支持多个 region，每个 region 支持多个安全组，每个安全组支持多个端口
+- **IP 探测降级链** -- ipinfo -> icanhazip -> ipify -> ifconfig.me，自动切换可用源
+- **可配置规则前缀** -- 支持 dev/prod 环境隔离，默认 `from Wulihe`
+- **先加后删更新策略** -- 避免规则清空导致用户被锁死
+- **云 API 重试** -- 网络超时自动指数退避重试
+- **systemd 长期运行** -- 开机自启，异常自动恢复
 
-   ```ini
-   [Unit]
-   Description=Update whitelist by Abe
-   After=network.target
+## 快速开始
 
-   [Service]
-   ExecStart=/usr/bin/python3 /path/to/your/main.py
-   WorkingDirectory=/path/to/your/
-   # 丢弃 stderr 和 stdout， 我们自己维护日志
-   StandardOutput=null
-   StandardError=null
-   Restart=always
+### 1. 安装
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
+```bash
+git clone https://github.com/abrahamgreyson/update-whitelist.git
+cd stay-in-whitelist
+pip install -e .
+```
 
-## 配置
+要求 Python 3.9+。
 
-### ipinfo.io
+### 2. 配置
 
-我们使用 ipinfo 的服务，去获得本地外网 ip， 最好申请个 token， 这样可以有更多的 rate limit 上限。
+```bash
+cp config.example.yaml config.yaml
+```
 
-### 华为云
+编辑 `config.yaml`，填入云服务凭证和需要放行的端口。详见下方[配置说明](#配置说明)。
 
-在[统一身份认证服务 IAM](https://console.huaweicloud.com/iam/?agencyId=c79cb5a07cda49f9bb4c4f7d97d4d506&region=cn-east-3&locale=zh-cn#/iam/users) 中创建用户，赋予特定的接口权限，获取用户的 `Access Key` 和 `Secret Key`。
+### 3. 运行
 
-我们使用到的华为云 VPC 接口有：
+```bash
+# 前台运行（调试用，带控制台输出）
+python main.py
 
-- `ListSecurityGroupRule`
-- `DeleteSecurityGroupRule`
-- `BatchCreateSecurityGroupRules`
+# 后台运行
+nohup python main.py > /dev/null 2>&1 &
+```
 
-我们需要放行的权限：
+## 配置说明
+
+配置文件为 `config.yaml`（模板见 `config.example.yaml`），使用 YAML 格式，Pydantic 校验。
+
+### 云服务商
+
+#### 华为云
+
+在[统一身份认证服务 IAM](https://console.huaweicloud.com/iam) 中创建用户，获取 `Access Key` 和 `Secret Key`，赋予以下权限：
 
 ```json
 {
@@ -93,17 +76,11 @@
 }
 ```
 
+使用的 VPC 接口：`ListSecurityGroupRule`、`DeleteSecurityGroupRule`、`BatchCreateSecurityGroupRules`。
+
 #### 腾讯云
 
-在[访问管理](https://console.cloud.tencent.com/cam/overview)中创建用户，赋予特定的接口权限，获取用户的 `SecretId` 和 `SecretKey`。
-
-我们使用到的接口：
-
-- `DescribeSecurityGroupPolicies`
-- `DeleteSecurityGroupPolicies`
-- `CreateSecurityGroupPolicies`
-
-我们需要放行的权限：
+在[访问管理](https://console.cloud.tencent.com/cam/overview) 中创建用户，获取 `SecretId` 和 `SecretKey`，赋予以下权限：
 
 ```json
 {
@@ -115,58 +92,166 @@
         "cvm:DeleteSecurityGroupPolicy"
       ],
       "effect": "allow",
-      "resource": [
-        "*"
-      ]
+      "resource": ["*"]
     }
   ],
   "version": "2.0"
 }
 ```
 
-## 扩展
+使用的接口：`DescribeSecurityGroupPolicies`、`DeleteSecurityGroupPolicies`、`CreateSecurityGroupPolicies`。
 
-因为是自用的，所以仅实现了腾讯和华为云，如果你使用其它云平台，请按照 `update_whitelist/cloud_providers` 目录下的现有代码实现自己的云服务供应商，需要实现的方法签名如下。 为了更加快捷地实现这些方法， 可以直接去云服务商的 API 调试台，先搞清楚接口什么怎么调用的，然后直接引入其 sdk 即可。
+### IP 探测
 
-```python
-    @abstractmethod
-    def initialize_client(self):
-        """
-        初始化特定云服务的客户端
-        """
-    pass
-
-    @abstractmethod
-    def delete_rules(self, group_id, rules):
-        """
-        删除安全组规则
-        """
-        pass
-
-    @abstractmethod
-    def add_rules(self, group_id, rules, ip):
-        """
-        添加安全组规则
-        """
-        pass
-
-    @abstractmethod
-    def get_rules(self, group_id):
-        """
-        获取安全组规则
-        """
-        pass
+```yaml
+ipinfo:
+  tokens:
+    - your_ipinfo_token
 ```
-  
-## 测试
+
+推荐在 [ipinfo.io](https://ipinfo.io) 申请 token 以获得更高的请求限额。如果未配置 token，工具会自动跳过 ipinfo，使用其他免费 IP 探测源（icanhazip、ipify、ifconfig.me）。
+
+### 高级配置
+
+#### 检查间隔
+
+```yaml
+check_interval: 600  # 默认 600 秒（10 分钟），最小 600 秒
+```
+
+#### 规则前缀（dev/prod 隔离）
+
+```yaml
+rule_prefix: "from Wulihe"  # 默认值
+```
+
+安全组规则的描述前缀。工具只管理匹配此前缀的规则。
+
+**dev/prod 隔离示例：** 如果开发环境和生产环境共用同一个安全组，可以设置不同的前缀（如 `from Wulihe-dev` 和 `from Wulihe-prod`），各自管理各自的规则，互不干扰。
+
+注意：更换前缀后，旧前缀的规则会变成孤儿规则，需要手动清理。
+
+#### 文件路径
+
+```yaml
+paths:
+  ip_cache: /var/lib/stay-in-whitelist/ip_cache.txt   # IP 缓存文件路径
+  log_file: /var/log/stay-in-whitelist/stay_in_whitelist.log  # 日志文件路径
+```
+
+默认情况下，缓存文件和日志文件存放在项目目录下。systemd 部署建议使用绝对路径。
+
+#### 超时设置
+
+```yaml
+timeouts:
+  ip_detection:
+    connect: 3   # 连接超时（秒）
+    read: 5      # 读取超时（秒）
+  cloud_api:
+    connect: 3   # 连接超时（秒）
+    read: 10     # 读取超时（秒）
+```
+
+大多数情况下不需要调整。
+
+## 架构
+
+```
+main.py                     # 入口：APScheduler 定时调度
+stay_in_whitelist/
+  config/config.py          # Pydantic 配置模型 + load_config()
+  ip_fetcher.py             # IP 探测（多 provider 降级链）
+  updater.py                # 编排层：遍历云/region/安全组，委托给 provider
+  logger.py                 # 日志（控制台 + 轮转文件）
+  cloud_providers/
+    base_cloud_provider.py  # 抽象基类（策略模式）
+    huawei_cloud.py         # 华为云实现
+    tencent_cloud.py        # 腾讯云实现
+```
+
+### 核心流程
+
+1. **定时轮询** -- APScheduler 每隔 `check_interval` 秒触发一次检查
+2. **IP 探测** -- 按 ipinfo -> icanhazip -> ipify -> ifconfig.me 顺序尝试，返回第一个有效 IP
+3. **变化检测** -- 将当前 IP 与 `ip_cache.txt` 中的缓存 IP 对比
+4. **规则更新** -- IP 变化时，遍历配置的云服务商/region/安全组，**先添加新规则再删除旧规则**，避免中间断档
+
+### 策略模式
+
+云服务提供商继承 `BaseCloudProvider`，实现统一接口：
+
+- `initialize_client()` -- 初始化 SDK 客户端
+- `get_rules()` -- 获取安全组规则（失败返回空列表）
+- `add_rules()` -- 添加安全组规则
+- `delete_rules()` -- 删除安全组规则
+
+扩展其他云服务时，在 `stay_in_whitelist/cloud_providers/` 目录下新增实现即可。
+
+## 部署
+
+### systemd 服务
+
+```ini
+[Unit]
+Description=Stay in Whitelist - IP whitelist auto-updater
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /path/to/stay-in-whitelist/main.py
+WorkingDirectory=/path/to/stay-in-whitelist/
+StandardOutput=null
+StandardError=null
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo vim /etc/systemd/system/stay-in-whitelist.service
+sudo systemctl daemon-reload
+sudo systemctl start stay-in-whitelist
+sudo systemctl enable stay-in-whitelist
+sudo systemctl status stay-in-whitelist
+```
+
+### 日志管理
+
+日志使用 `TimedRotatingFileHandler`，每 24 小时轮转一次，保留 7 个备份文件。日志文件默认为项目目录下的 `stay_in_whitelist.log`。
+
+## 迁移指南
+
+从 `update-whitelist` 升级到 `stay-in-whitelist` 需要注意以下变化：
+
+| 项目 | 旧值 | 新值 |
+|------|------|------|
+| 包名 | `update_whitelist` | `stay_in_whitelist` |
+| 日志文件 | `update_whitelist.log` | `stay_in_whitelist.log` |
+| 项目名 | update-whitelist | Stay in Whitelist |
+
+**注意事项：**
+
+- `config.yaml` 的字段名没有变化，现有配置文件可以直接使用
+- 旧的 `ip_cache.txt` 格式不变，可以继续使用
+- 旧日志文件 `update_whitelist.log` 不会自动迁移，可手动删除或归档
+- 安全组中的旧规则描述前缀（如 `from Wulihe`）不受影响，工具会继续管理匹配的规则
+
+## 开发
 
 ```bash
 # 安装开发依赖
 pip install -e ".[dev]"
-# 运行
+
+# 运行测试
 pytest
+
+# 带覆盖率报告
+pytest --cov=stay_in_whitelist
 ```
 
-## LICENSE
+Python 版本支持：3.9、3.10、3.11、3.12。
+
+## 许可证
 
 MIT
