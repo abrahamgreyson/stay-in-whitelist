@@ -12,7 +12,7 @@ from huaweicloudsdkvpc.v3 import VpcClient, ListSecurityGroupRulesRequest, Delet
 from huaweicloudsdkvpc.v3.region.vpc_region import VpcRegion
 from huaweicloudsdkcore.exceptions import exceptions
 
-from update_whitelist.logger import get_logger
+from stay_in_whitelist.logger import get_logger
 
 logger = get_logger()
 

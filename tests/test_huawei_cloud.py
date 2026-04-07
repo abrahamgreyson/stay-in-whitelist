@@ -5,7 +5,7 @@ Date: 2024/6/25 16:31:45
 from huaweicloudsdkcore.auth.credentials import BasicCredentials
 from huaweicloudsdkcore.exceptions import exceptions
 from huaweicloudsdkvpc.v3 import VpcClient
-from update_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
+from stay_in_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
 
 
 def test_initialize_client(mocker):
@@ -89,7 +89,7 @@ def test_add_rules_catches_exception(mocker):
         500, SdkError(request_id="test", error_code="test", error_msg="test error")
     )
     mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
-    mock_log = mocker.patch('update_whitelist.cloud_providers.huawei_cloud.BaseCloudProvider.log')
+    mock_log = mocker.patch('stay_in_whitelist.cloud_providers.huawei_cloud.BaseCloudProvider.log')
     huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
     huawei_cloud.client = mock_vpc_client
     # Should NOT raise -- exception is caught internally

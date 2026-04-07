@@ -6,10 +6,10 @@ Date: 2024/6/25 12:14:39
 import pytest
 import requests
 from unittest.mock import Mock, patch, call, MagicMock
-from update_whitelist.updater import Updater
-from update_whitelist.cloud_providers.tencent_cloud import TencentCloud
-from update_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
-from update_whitelist.config.config import Config, CloudProvider, Region, Rule, Allow
+from stay_in_whitelist.updater import Updater
+from stay_in_whitelist.cloud_providers.tencent_cloud import TencentCloud
+from stay_in_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
+from stay_in_whitelist.config.config import Config, CloudProvider, Region, Rule, Allow
 
 
 def test_client_is_instance_variable():
@@ -139,13 +139,13 @@ def test_set_client(mocker):
     # 创建一个模拟的 TencentCloud 对象
     mock_tencent_cloud = mocker.MagicMock(spec=TencentCloud)
     # 使用模拟的 TencentCloud 对象替代真实的 TencentCloud 类
-    mocker.patch('update_whitelist.updater.TencentCloud', return_value=mock_tencent_cloud)
+    mocker.patch('stay_in_whitelist.updater.TencentCloud', return_value=mock_tencent_cloud)
     updater.set_client('tencent', 'key1', 'secret1', 'region1', 'from Wulihe')
     assert isinstance(updater.client, TencentCloud)
     # 创建一个模拟的 HuaweiCloud 对象
     mock_huawei_cloud = mocker.MagicMock(spec=HuaweiCloud)
     # 使用模拟的 HuaweiCloud 对象替代真实的 HuaweiCloud 类
-    mocker.patch('update_whitelist.updater.HuaweiCloud', return_value=mock_huawei_cloud)
+    mocker.patch('stay_in_whitelist.updater.HuaweiCloud', return_value=mock_huawei_cloud)
     updater.set_client('huawei', 'key2', 'secret2', 'ae-ad-1', 'from Wulihe')
     assert isinstance(updater.client, HuaweiCloud)
     with pytest.raises(ValueError):
@@ -157,7 +157,7 @@ def test_fetch_security_group_rules_returns_empty_list_on_error(mocker):
     updater = Updater()
     updater.client = Mock()
     updater.client.get_rules.side_effect = Exception('error')
-    with patch('update_whitelist.updater.logger'):
+    with patch('stay_in_whitelist.updater.logger'):
         result = updater.fetch_security_group_rules('sg1')
     assert result == []
 

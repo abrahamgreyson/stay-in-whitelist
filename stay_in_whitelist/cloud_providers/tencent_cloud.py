@@ -10,7 +10,7 @@ from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.vpc.v20170312 import vpc_client, models
 
-from update_whitelist.logger import get_logger
+from stay_in_whitelist.logger import get_logger
 
 logger = get_logger()
 

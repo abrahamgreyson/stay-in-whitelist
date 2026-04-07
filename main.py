@@ -9,10 +9,10 @@ from functools import partial
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from update_whitelist.config.config import load_config
-from update_whitelist.ip_fetcher import get_current_ip, load_cached_ip, cache_ip
-from update_whitelist.updater import Updater
-from update_whitelist.logger import get_logger, reconfigure_logging
+from stay_in_whitelist.config.config import load_config
+from stay_in_whitelist.ip_fetcher import get_current_ip, load_cached_ip, cache_ip
+from stay_in_whitelist.updater import Updater
+from stay_in_whitelist.logger import get_logger, reconfigure_logging
 import requests
 
 logger = get_logger()

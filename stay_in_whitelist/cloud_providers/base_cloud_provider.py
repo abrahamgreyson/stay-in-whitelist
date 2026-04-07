@@ -9,7 +9,7 @@ from typing import Any, Dict
 from huaweicloudsdkcore.exceptions.exceptions import ClientRequestException
 from tencentcloud.common.exception import TencentCloudSDKException
 
-from update_whitelist.logger import get_logger
+from stay_in_whitelist.logger import get_logger
 
 logger = get_logger()
 

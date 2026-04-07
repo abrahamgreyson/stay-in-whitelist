@@ -1,5 +1,5 @@
 """
-Tests for update_whitelist.config.config module.
+Tests for stay_in_whitelist.config.config module.
 Covers: import safety, load_config() errors, Config validation, Paths defaults.
 """
 
@@ -8,7 +8,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from update_whitelist.config.config import (
+from stay_in_whitelist.config.config import (
     Config,
     CloudProvider,
     Region,
@@ -25,7 +25,7 @@ class TestImportSafety:
     """Importing the config module must not trigger file I/O."""
 
     def test_import_without_file(self):
-        """Importing update_whitelist.config.config does NOT raise
+        """Importing stay_in_whitelist.config.config does NOT raise
         even when config.yaml is absent from the working directory."""
         # If we got here, the import at the top of this file succeeded
         # without needing a config.yaml in the current directory.
@@ -33,7 +33,7 @@ class TestImportSafety:
 
     def test_no_module_level_config_singleton(self):
         """The module must NOT expose a 'config' singleton variable."""
-        import update_whitelist.config.config as cfg_module
+        import stay_in_whitelist.config.config as cfg_module
         assert not hasattr(cfg_module, 'config'), \
             "Module should not have a 'config' singleton (module-level I/O removed)"
 

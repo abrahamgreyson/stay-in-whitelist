@@ -7,7 +7,7 @@ import pytest
 import requests
 from unittest.mock import patch, MagicMock
 
-from update_whitelist.ip_fetcher import get_current_ip, load_cached_ip, cache_ip
+from stay_in_whitelist.ip_fetcher import get_current_ip, load_cached_ip, cache_ip
 
 
 def _mock_response(status_code=200, text="1.2.3.4"):
@@ -90,7 +90,7 @@ def test_get_current_ip_no_token_skips_ipinfo(mocker, mock_config):
 
 def test_get_current_ip_logs_provider_name_not_url(mocker, mock_config):
     """Test: get_current_ip logs provider name, not full URL (no token exposure)."""
-    mock_logger = mocker.patch('update_whitelist.ip_fetcher.logger')
+    mock_logger = mocker.patch('stay_in_whitelist.ip_fetcher.logger')
     mocker.patch('requests.get', return_value=_mock_response(200, "1.2.3.4\n"))
     get_current_ip(mock_config)
     # Check that no log call contains the token

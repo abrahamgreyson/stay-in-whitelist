@@ -3,8 +3,8 @@ Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/25 17:19:21
 """
 
-from update_whitelist.cloud_providers.base_cloud_provider import BaseCloudProvider
-from update_whitelist.logger import get_logger
+from stay_in_whitelist.cloud_providers.base_cloud_provider import BaseCloudProvider
+from stay_in_whitelist.logger import get_logger
 
 
 class MockCloudProvider(BaseCloudProvider):

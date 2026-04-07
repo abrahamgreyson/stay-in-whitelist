@@ -23,7 +23,7 @@ def get_logger(name=__name__):
         ch.setLevel(logging.DEBUG)
 
         # 创建一个文件处理器，每小时轮转一次日志文件
-        fh = TimedRotatingFileHandler('update_whitelist.log', when='H', interval=24, backupCount=7)
+        fh = TimedRotatingFileHandler('stay_in_whitelist.log', when='H', interval=24, backupCount=7)
         fh.setLevel(logging.DEBUG)
 
         # 创建一个格式器，并添加到处理器中

@@ -6,7 +6,7 @@ Pydantic models for cloud provider configuration and a load_config() function
 for loading configuration from a YAML file.
 
 Usage:
-    from update_whitelist.config.config import load_config
+    from stay_in_whitelist.config.config import load_config
     config = load_config()          # uses default config.yaml path
     config = load_config("/path")   # uses explicit path
 
@@ -89,7 +89,7 @@ def load_config(config_path: Optional[str] = None) -> Config:
 
     Args:
         config_path: Path to config YAML file. Defaults to config.yaml
-                     in the project root (parent of update_whitelist/).
+                     in the project root (parent of stay_in_whitelist/).
 
     Returns:
         Config: Validated Pydantic Config object.

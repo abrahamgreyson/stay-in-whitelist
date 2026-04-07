@@ -4,7 +4,7 @@ Provides mock_config fixture per D-13 for use across all test files.
 """
 
 import pytest
-from update_whitelist.config.config import (
+from stay_in_whitelist.config.config import (
     Config,
     CloudProvider,
     Region,
