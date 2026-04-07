@@ -84,7 +84,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md -- Rule prefix: add configurable rule_prefix field, thread through Updater to cloud providers (IDENT-05, IDENT-06)
-- [ ] 04-02-PLAN.md -- Config/build/CI string updates: pyproject.toml, .gitignore, CI --cov flags, config.example.yaml comments (IDENT-01, IDENT-02, IDENT-03)
+- [x] 04-02-PLAN.md -- Config/build/CI string updates: pyproject.toml, .gitignore, CI --cov flags, config.example.yaml comments (IDENT-01, IDENT-02, IDENT-03)
 - [ ] 04-03-PLAN.md -- Package rename: git mv update_whitelist to stay_in_whitelist, all Python imports, test paths, log/comment audit (IDENT-01, IDENT-02, IDENT-03)
 - [ ] 04-04-PLAN.md -- README rewrite: full rewrite with updated branding, badges, architecture, config docs, migration notes (IDENT-04)
 

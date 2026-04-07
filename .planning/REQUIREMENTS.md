@@ -33,9 +33,9 @@
 
 ### Project Identity (IDENT)
 
-- [ ] **IDENT-01**: Python package renamed from `update_whitelist` to `stay_in_whitelist` — aligns with project directory name
-- [ ] **IDENT-02**: All user-facing strings, log messages, and comments updated to "Stay in Whitelist" branding
-- [ ] **IDENT-03**: Config YAML keys updated for new naming (where applicable)
+- [x] **IDENT-01**: Python package renamed from `update_whitelist` to `stay_in_whitelist` — aligns with project directory name
+- [x] **IDENT-02**: All user-facing strings, log messages, and comments updated to "Stay in Whitelist" branding
+- [x] **IDENT-03**: Config YAML keys updated for new naming (where applicable)
 - [ ] **IDENT-04**: `README.md` rewritten to reflect new project name and updated architecture
 - [x] **IDENT-05**: Security group rule description prefix updated from "from Wulihe" to "Stay-in-Whitelist" — aligns with new project identity
 - [x] **IDENT-06**: Rule description prefix is configurable via `config.yaml` — isolates dev/prod environments (e.g. "Stay-in-Whitelist-prod" vs "Stay-in-Whitelist-dev"), prevents home debugging from overwriting workplace IP rules
@@ -87,9 +87,9 @@
 | QUAL-03 | Phase 3 | Complete |
 | QUAL-05 | Phase 3 | Complete |
 | QUAL-06 | Phase 3 | Complete |
-| IDENT-01 | Phase 4 | Pending |
-| IDENT-02 | Phase 4 | Pending |
-| IDENT-03 | Phase 4 | Pending |
+| IDENT-01 | Phase 4 | Complete |
+| IDENT-02 | Phase 4 | Complete |
+| IDENT-03 | Phase 4 | Complete |
 | IDENT-04 | Phase 4 | Pending |
 | IDENT-05 | Phase 4 | Complete |
 | IDENT-06 | Phase 4 | Complete |
