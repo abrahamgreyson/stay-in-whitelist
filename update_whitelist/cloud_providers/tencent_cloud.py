@@ -31,7 +31,7 @@ class TencentCloud(BaseCloudProvider):
             resp = self.client.DescribeSecurityGroupPolicies(req)
             # 输出json格式的字符串回包
             rules = json.loads(resp.to_json_string()).get("SecurityGroupPolicySet").get("Ingress")
-            filtered_rules = [rule for rule in rules if rule['PolicyDescription'].startswith('from Wulihe')]
+            filtered_rules = [rule for rule in rules if rule['PolicyDescription'].startswith(self.rule_prefix)]
             return filtered_rules
         except TencentCloudSDKException as err:
             BaseCloudProvider.log(err)
@@ -50,7 +50,7 @@ class TencentCloud(BaseCloudProvider):
                             "Port": str(rule['port']),
                             "CidrBlock": ip,
                             "Action": "accept",
-                            "PolicyDescription": f"from Wulihe{' - ' + rule['desc'] if rule.get('desc') else ''}"
+                            "PolicyDescription": f"{self.rule_prefix}{' - ' + rule['desc'] if rule.get('desc') else ''}"
                         } for rule in rules
                     ]
                 }

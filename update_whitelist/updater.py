@@ -54,7 +54,7 @@ class Updater:
                     allows = rule.allow
 
                     # 我们以安全组为单位去初始化云服务客户端
-                    self.set_client(provider_name, access_key, secret_key, region)
+                    self.set_client(provider_name, access_key, secret_key, region, config.rule_prefix)
                     # 更新规则
                     self.update_security_group_rules(sg, allows, current_ip)
         return None
@@ -81,14 +81,14 @@ class Updater:
 
         return None
 
-    def set_client(self, provider_name, access_key, secret_key, region) -> None:
+    def set_client(self, provider_name, access_key, secret_key, region, rule_prefix) -> None:
         """
         设置云服务客户端
         """
         if provider_name == 'huawei':
-            self.client = HuaweiCloud(access_key, secret_key, region)
+            self.client = HuaweiCloud(access_key, secret_key, region, rule_prefix=rule_prefix)
         elif provider_name == 'tencent':
-            self.client = TencentCloud(access_key, secret_key, region)
+            self.client = TencentCloud(access_key, secret_key, region, rule_prefix=rule_prefix)
         elif provider_name == 'aliyun':
             # 如果您还没有实现阿里云，我们可以暂时抛出一个异常
             raise NotImplementedError("阿里云安全组规则获取尚未实现")

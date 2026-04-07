@@ -36,7 +36,7 @@ def test_update_cloud_providers_uses_attributes(mocker):
         )
     )
     updater.update_cloud_providers('127.0.0.1', config)
-    updater.set_client.assert_called_once_with('tencent', 'key1', 'secret1', 'region1')
+    updater.set_client.assert_called_once_with('tencent', 'key1', 'secret1', 'region1', 'from Wulihe')
     updater.update_security_group_rules.assert_called_once_with('sg1', config.tencent.regions[0].rules[0].allow, '127.0.0.1')
 
 
@@ -57,7 +57,7 @@ def test_update_cloud_providers_skips_none_providers(mocker):
         # tencent and aliyun are None by default
     )
     updater.update_cloud_providers('1.2.3.4', config)
-    updater.set_client.assert_called_once_with('huawei', 'hk1', 'hs1', 'cn-north')
+    updater.set_client.assert_called_once_with('huawei', 'hk1', 'hs1', 'cn-north', 'from Wulihe')
 
 
 def test_update_cloud_providers_skips_non_provider_fields(mocker):
@@ -78,7 +78,7 @@ def test_update_cloud_providers_skips_non_provider_fields(mocker):
     updater.update_cloud_providers('10.0.0.1', config)
     # Only tencent should be called, not ipinfo/timeouts
     assert updater.set_client.call_count == 1
-    updater.set_client.assert_called_once_with('tencent', 'tk', 'ts', 'ap-guangzhou')
+    updater.set_client.assert_called_once_with('tencent', 'tk', 'ts', 'ap-guangzhou', 'from Wulihe')
 
 
 def test_update_security_group_rules_with_existed_rules(mocker):
@@ -140,16 +140,16 @@ def test_set_client(mocker):
     mock_tencent_cloud = mocker.MagicMock(spec=TencentCloud)
     # 使用模拟的 TencentCloud 对象替代真实的 TencentCloud 类
     mocker.patch('update_whitelist.updater.TencentCloud', return_value=mock_tencent_cloud)
-    updater.set_client('tencent', 'key1', 'secret1', 'region1')
+    updater.set_client('tencent', 'key1', 'secret1', 'region1', 'from Wulihe')
     assert isinstance(updater.client, TencentCloud)
     # 创建一个模拟的 HuaweiCloud 对象
     mock_huawei_cloud = mocker.MagicMock(spec=HuaweiCloud)
     # 使用模拟的 HuaweiCloud 对象替代真实的 HuaweiCloud 类
     mocker.patch('update_whitelist.updater.HuaweiCloud', return_value=mock_huawei_cloud)
-    updater.set_client('huawei', 'key2', 'secret2', 'ae-ad-1')
+    updater.set_client('huawei', 'key2', 'secret2', 'ae-ad-1', 'from Wulihe')
     assert isinstance(updater.client, HuaweiCloud)
     with pytest.raises(ValueError):
-        updater.set_client('unsupported', 'key', 'secret', 'region')
+        updater.set_client('unsupported', 'key', 'secret', 'region', 'from Wulihe')
 
 
 def test_fetch_security_group_rules_returns_empty_list_on_error(mocker):

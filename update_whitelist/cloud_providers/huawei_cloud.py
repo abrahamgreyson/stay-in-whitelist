@@ -41,7 +41,7 @@ class HuaweiCloud(BaseCloudProvider):
             request.security_group_id = group_id
             rules_body = [
                 BatchCreateSecurityGroupRulesOption(
-                    description=f"from Wulihe{' - ' + rule['desc'] if rule.get('desc') else ''}",
+                    description=f"{self.rule_prefix}{' - ' + rule['desc'] if rule.get('desc') else ''}",
                     direction="ingress",
                     protocol="tcp",
                     multiport=str(rule['port']),
@@ -81,7 +81,7 @@ class HuaweiCloud(BaseCloudProvider):
             # 过滤规则
             return [
                 rule for rule in rules
-                if getattr(rule, 'description', None) and getattr(rule, 'description').startswith("from Wulihe") and
+                if getattr(rule, 'description', None) and getattr(rule, 'description').startswith(self.rule_prefix) and
                    getattr(rule, 'direction', None) and getattr(rule, 'direction') == "ingress"
             ]
 

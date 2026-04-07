@@ -73,6 +73,7 @@ class Config(BaseModel):
     timeouts: TimeoutSettings = TimeoutSettings()
     check_interval: int = 600
     paths: Paths = Paths()
+    rule_prefix: str = "from Wulihe"
 
     @field_validator('check_interval')
     @classmethod

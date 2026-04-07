@@ -54,6 +54,11 @@ ipinfo:
 # Optional: check interval in seconds (default: 600, minimum: 600)
 # check_interval: 600
 
+# Optional: security group rule description prefix (default: "from Wulihe")
+# Change this for dev/prod isolation, e.g., "from Wulihe-dev" for development
+# Note: changing prefix means existing rules with old prefix become orphaned and must be cleaned up manually
+# rule_prefix: "from Wulihe"
+
 # Optional: file paths (defaults to same directory as config.yaml)
 # paths:
 #   ip_cache: /var/lib/stay-in-whitelist/ip_cache.txt

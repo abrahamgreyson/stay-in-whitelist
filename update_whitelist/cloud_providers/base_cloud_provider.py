@@ -35,6 +35,7 @@ class BaseCloudProvider(ABC):
         self.access_key = access_key
         self.secret_key = secret_key
         self.region = region
+        self.rule_prefix = kwargs.pop('rule_prefix', 'from Wulihe')
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.initialize_client()
