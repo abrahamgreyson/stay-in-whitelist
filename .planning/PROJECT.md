@@ -34,16 +34,17 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 - ✓ 安全组规则"先加后删"更新顺序 — Phase 01
 - ✓ get_rules 失败返回 [] 防止规则堆积 — Phase 01
 - ✓ huawei_cloud.add_rules 异常处理 — Phase 01
-- [ ] 项目重命名为 "Stay in Whitelist"（包名、类名、配置键名、注释全面更新）
+- ✓ 项目重命名为 "Stay in Whitelist"（包名、imports、配置键名、注释全面更新）— Phase 04
+- ✓ 可配置 rule_prefix 实现 dev/prod 环境隔离 — Phase 04
 - ✓ 检查间隔改为可配置，默认 600 秒 (10 分钟) — Phase 02
 - ✓ 修复路径问题（ip_cache.txt、日志文件支持绝对路径，兼容 systemd）— Phase 02
 - ✓ 模块级 config 单例移除，改为显式 load_config() — Phase 02
 - ✓ Updater client 从类变量改为实例变量 — Phase 02
 - ✓ config.dict() 替换为属性迭代，消除 Pydantic 弃用 — Phase 02
-- [ ] 项目重命名为 "Stay in Whitelist"（包名、类名、配置键名、注释全面更新）
-- [ ] 修复 get_rules 失败返回 None 导致规则堆积的问题 (updater 层已修复，Phase 01)
-- [ ] huawei_cloud.add_rules 加异常处理 (已完成，Phase 01)
-- [ ] print() 调用替换为 logger
+- ✓ print() 调用替换为 logger — Phase 03
+- ✓ 删除未使用的 config_loader.py — Phase 03
+- ✓ 修复 requirements.dev.txt 语法错误 — Phase 03
+- ✓ 日志审计确认无凭据泄漏 — Phase 03
 
 ### Out of Scope
 
@@ -74,7 +75,7 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 - 单元测试覆盖较好（mock 方式），无集成测试
 - 两个云服务提供商：华为云、腾讯云
 - 策略模式的 cloud provider 抽象（BaseCloudProvider ABC）
-- 代码质量问题：print() 混用、相对路径、模块级副作用、死代码
+- 代码质量问题已清理（Phase 03）：print() 全部替换为 logger，死代码已删除，构建工具链已修复
 
 ## Constraints
 
@@ -92,7 +93,7 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 | 先加后删的规则更新顺序 | 避免中间断档导致用户被锁死 | — Validated Phase 01 |
 | 默认检查间隔 10 分钟 | 用户从 3 分钟调整为 10 分钟，减少 API 调用频率，降低 rate limit 风险 | — Validated Phase 02 |
 | 多 IP 探测服务商降级 | IPinfo 免费额度不足，需要备用提供商保证可用性 | — Validated Phase 01 |
-| 项目重命名为 Stay in Whitelist | 与目录名对齐，更准确描述功能 | — Pending |
+| 项目重命名为 Stay in Whitelist | 与目录名对齐，更准确描述功能，支持 dev/prod 环境隔离 | — Validated Phase 04 |
 
 ## Evolution
 
@@ -112,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after Phase 02 completion*
+*Last updated: 2026-04-07 after Phase 04 completion*
