@@ -1,5 +1,5 @@
 [project]
-name = "update-whitelist"
+name = "stay-in-whitelist"
 dynamic = ["version"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -41,4 +41,4 @@ addopts = "--import-mode=importlib"
 pythonpath = ["."]
 
 [tool.setuptools_scm]
-write_to = "update_whitelist/_version.py"
+write_to = "stay_in_whitelist/_version.py"
