@@ -147,3 +147,21 @@ class TestMockConfigFixture:
         """mock_config has paths with ip_cache and log_file."""
         assert mock_config.paths.ip_cache == '/tmp/test_ip_cache.txt'
         assert mock_config.paths.log_file == '/tmp/test.log'
+
+
+class TestRulePrefix:
+    """rule_prefix field validation and defaults."""
+
+    def test_rule_prefix_default(self):
+        """Config() defaults rule_prefix to 'from Wulihe'."""
+        cfg = Config()
+        assert cfg.rule_prefix == "from Wulihe"
+
+    def test_rule_prefix_custom_value(self):
+        """Config(rule_prefix='from Wulihe-dev') stores custom value."""
+        cfg = Config(rule_prefix="from Wulihe-dev")
+        assert cfg.rule_prefix == "from Wulihe-dev"
+
+    def test_rule_prefix_in_mock_config(self, mock_config):
+        """mock_config fixture includes rule_prefix with default value."""
+        assert mock_config.rule_prefix == "from Wulihe"

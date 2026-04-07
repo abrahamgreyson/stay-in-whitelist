@@ -70,3 +70,57 @@ def test_get_rules_returns_empty_list_on_error(mocker):
     result = tencent_cloud.get_rules('group_id')
     assert result == []
     assert result is not None
+
+
+def test_get_rules_with_custom_prefix(mocker):
+    """get_rules filters by custom rule_prefix when configured."""
+    mock_vpc_client = mocker.MagicMock()
+    mock_response = mocker.MagicMock()
+    mock_response.to_json_string.return_value = json.dumps({
+        "SecurityGroupPolicySet": {
+            "Ingress": [
+                {
+                    "PolicyDescription": "custom-prefix",
+                    "PolicyIndex": 1
+                },
+                {
+                    "PolicyDescription": "from Wulihe",
+                    "PolicyIndex": 2
+                }
+            ]
+        }
+    })
+    mock_vpc_client.DescribeSecurityGroupPolicies.return_value = mock_response
+    mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
+    tencent_cloud = TencentCloud('access_key', 'secret_key', 'region', rule_prefix='custom-prefix')
+    tencent_cloud.client = mock_vpc_client
+    rules = tencent_cloud.get_rules('group_id')
+    assert len(rules) == 1
+    assert rules[0]['PolicyDescription'] == 'custom-prefix'
+
+
+def test_get_rules_filters_by_prefix(mocker):
+    """get_rules excludes rules not matching the configured prefix."""
+    mock_vpc_client = mocker.MagicMock()
+    mock_response = mocker.MagicMock()
+    mock_response.to_json_string.return_value = json.dumps({
+        "SecurityGroupPolicySet": {
+            "Ingress": [
+                {
+                    "PolicyDescription": "from Wulihe",
+                    "PolicyIndex": 1
+                },
+                {
+                    "PolicyDescription": "other-prefix",
+                    "PolicyIndex": 2
+                }
+            ]
+        }
+    })
+    mock_vpc_client.DescribeSecurityGroupPolicies.return_value = mock_response
+    mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
+    tencent_cloud = TencentCloud('access_key', 'secret_key', 'region')
+    tencent_cloud.client = mock_vpc_client
+    rules = tencent_cloud.get_rules('group_id')
+    assert len(rules) == 1
+    assert rules[0]['PolicyDescription'] == 'from Wulihe'
