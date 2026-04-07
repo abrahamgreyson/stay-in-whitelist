@@ -44,9 +44,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. The check interval is read from config.yaml (defaulting to 600 seconds) and can be changed without code changes
   2. The ip_cache file and log file are written to their configured absolute paths regardless of working directory -- systemd deployment works correctly
-  3. Importing the config module does not trigger file I/O -- config loads only when explicitly initialized
-  4. No Pydantic deprecation warnings appear during config usage (model_dump replaces dict)
-  5. The Updater's cloud client is an instance variable, not shared across instances via class variable
+  3. Importing the Config module does not trigger file I/O -- Config loads only when explicitly initialized
+  4. No Pydantic deprecation warnings appear during Config usage (model_dump replaces dict)
+  5. The Updater's Cloud client is an instance variable, not shared across instances via class variable
 **Plans**: 3 plans
 
 Plans:
@@ -80,12 +80,13 @@ Plans:
   3. The README accurately describes the project by its new name with current architecture details
   4. Security group rule descriptions use the "Stay-in-Whitelist" prefix (or a custom prefix from config)
   5. A developer can run a local instance with a custom rule prefix (e.g., "Stay-in-Whitelist-dev") that does not interfere with production rules on the same cloud account
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [x] 04-01-PLAN.md -- Rule prefix: add configurable rule_prefix field, thread through Updater to cloud providers (IDENT-05, IDENT-06)
+- [ ] 04-02-PLAN.md -- Config/build/CI string updates: pyproject.toml, .gitignore, CI --cov flags, config.example.yaml comments (IDENT-01, IDENT-02, IDENT-03)
+- [ ] 04-03-PLAN.md -- Package rename: git mv update_whitelist to stay_in_whitelist, all Python imports, test paths, log/comment audit (IDENT-01, IDENT-02, IDENT-03)
+- [ ] 04-04-PLAN.md -- README rewrite: full rewrite with updated branding, badges, architecture, config docs, migration notes (IDENT-04)
 
 ### Phase 5: Operational Deployment
 **Goal**: The daemon runs reliably as a systemd service with proper scheduler configuration and sufficient log retention for audit
@@ -111,5 +112,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Critical Reliability | 3/3 | Complete | 2026-04-05 |
 | 2. Configuration Hardening | 0/3 | Planning complete | - |
 | 3. Code Quality | 0/2 | Planning complete | - |
-| 4. Project Identity | 0/3 | Not started | - |
+| 4. Project Identity | 0/4 | Planning complete | - |
 | 5. Operational Deployment | 0/2 | Not started | - |

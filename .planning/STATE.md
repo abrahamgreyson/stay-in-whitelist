@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-04-06T03:22:10.890Z"
-last_activity: 2026-04-06
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-04-07T01:38:05.622Z"
+last_activity: 2026-04-07
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 12
+  completed_plans: 9
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-05)
 
 **Core value:** IP changed, whitelist auto-updates -- no missed updates, no hangs, no lockouts.
-**Current focus:** Phase 03 — code-quality
+**Current focus:** Phase 04 — project-identity
 
 ## Current Position
 
-Phase: 03 (code-quality) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-04-06
+Phase: 04 (project-identity) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-07
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-configuration-hardening P02-03 | 2min | 1 tasks | 5 files |
 | Phase 03 P02 | 1min | 2 tasks | 2 files |
 | Phase 03 P01 | 2min | 2 tasks | 3 files |
+| Phase 04 P01 | 3min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Config load errors use logger.error() instead of print() -- StreamHandler provides console output at startup
 - [Phase 03]: Cloud provider API responses logged at DEBUG level to reduce noise during normal operation
 - [Phase 03]: Credential leak audit passed: no access_key, secret_key, or URL tokens appear in any logger call across ip_fetcher, huawei_cloud, tencent_cloud
+- [Phase 04]: BaseCloudProvider pops rule_prefix from kwargs and defaults to 'from Wulihe' for backward compatibility
+- [Phase 04]: rule_prefix placed as top-level Config field (not per-provider) since all providers share the same prefix
 
 ### Pending Todos
 
@@ -101,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T03:22:10.889Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-04-07T01:38:05.619Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None

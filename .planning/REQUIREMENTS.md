@@ -37,8 +37,8 @@
 - [ ] **IDENT-02**: All user-facing strings, log messages, and comments updated to "Stay in Whitelist" branding
 - [ ] **IDENT-03**: Config YAML keys updated for new naming (where applicable)
 - [ ] **IDENT-04**: `README.md` rewritten to reflect new project name and updated architecture
-- [ ] **IDENT-05**: Security group rule description prefix updated from "from Wulihe" to "Stay-in-Whitelist" — aligns with new project identity
-- [ ] **IDENT-06**: Rule description prefix is configurable via `config.yaml` — isolates dev/prod environments (e.g. "Stay-in-Whitelist-prod" vs "Stay-in-Whitelist-dev"), prevents home debugging from overwriting workplace IP rules
+- [x] **IDENT-05**: Security group rule description prefix updated from "from Wulihe" to "Stay-in-Whitelist" — aligns with new project identity
+- [x] **IDENT-06**: Rule description prefix is configurable via `config.yaml` — isolates dev/prod environments (e.g. "Stay-in-Whitelist-prod" vs "Stay-in-Whitelist-dev"), prevents home debugging from overwriting workplace IP rules
 
 ### Operational (OPS)
 
@@ -91,8 +91,8 @@
 | IDENT-02 | Phase 4 | Pending |
 | IDENT-03 | Phase 4 | Pending |
 | IDENT-04 | Phase 4 | Pending |
-| IDENT-05 | Phase 4 | Pending |
-| IDENT-06 | Phase 4 | Pending |
+| IDENT-05 | Phase 4 | Complete |
+| IDENT-06 | Phase 4 | Complete |
 | OPS-01 | Phase 5 | Pending |
 | OPS-02 | Phase 5 | Pending |
 | OPS-03 | Phase 5 | Pending |
