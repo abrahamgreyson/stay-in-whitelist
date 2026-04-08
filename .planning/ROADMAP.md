@@ -86,7 +86,7 @@ Plans:
 - [x] 04-01-PLAN.md -- Rule prefix: add configurable rule_prefix field, thread through Updater to cloud providers (IDENT-05, IDENT-06)
 - [x] 04-02-PLAN.md -- Config/build/CI string updates: pyproject.toml, .gitignore, CI --cov flags, config.example.yaml comments (IDENT-01, IDENT-02, IDENT-03)
 - [x] 04-03-PLAN.md -- Package rename: git mv update_whitelist to stay_in_whitelist, all Python imports, test paths, log/comment audit (IDENT-01, IDENT-02, IDENT-03)
-- [ ] 04-04-PLAN.md -- README rewrite: full rewrite with updated branding, badges, architecture, config docs, migration notes (IDENT-04)
+- [x] 04-04-PLAN.md -- README rewrite: full rewrite with updated branding, badges, architecture, config docs, migration notes (IDENT-04)
 
 ### Phase 5: Operational Deployment
 **Goal**: The daemon runs reliably as a systemd service with proper scheduler configuration and sufficient log retention for audit
@@ -96,11 +96,12 @@ Plans:
   1. APScheduler does not silently skip scheduled checks due to misfire handling -- misfire_grace_time is explicitly configured
   2. The systemd service unit template references the correct WorkingDirectory, StandardOutput, and StandardError paths for the renamed project
   3. Log files are retained for 30 days, providing a sufficient audit trail for a security tool
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Configure APScheduler misfire handling and extend log retention to 30 days (OPS-01, OPS-03)
+- [ ] 05-02-PLAN.md — Create systemd service template with correct paths and validation tests (OPS-02)
+- [ ] 05-03-PLAN.md — Add comprehensive systemd deployment instructions to README (OPS-02)
 
 ## Progress
 
@@ -113,4 +114,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Configuration Hardening | 0/3 | Planning complete | - |
 | 3. Code Quality | 0/2 | Planning complete | - |
 | 4. Project Identity | 0/4 | Planning complete | - |
-| 5. Operational Deployment | 0/2 | Not started | - |
+| 5. Operational Deployment | 0/3 | Planning complete | - |
