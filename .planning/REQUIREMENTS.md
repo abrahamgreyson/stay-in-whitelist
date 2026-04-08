@@ -36,15 +36,15 @@
 - [x] **IDENT-01**: Python package renamed from `update_whitelist` to `stay_in_whitelist` — aligns with project directory name
 - [x] **IDENT-02**: All user-facing strings, log messages, and comments updated to "Stay in Whitelist" branding
 - [x] **IDENT-03**: Config YAML keys updated for new naming (where applicable)
-- [ ] **IDENT-04**: `README.md` rewritten to reflect new project name and updated architecture
+- [x] **IDENT-04**: `README.md` rewritten to reflect new project name and updated architecture
 - [x] **IDENT-05**: Security group rule description prefix updated from "from Wulihe" to "Stay-in-Whitelist" — aligns with new project identity
 - [x] **IDENT-06**: Rule description prefix is configurable via `config.yaml` — isolates dev/prod environments (e.g. "Stay-in-Whitelist-prod" vs "Stay-in-Whitelist-dev"), prevents home debugging from overwriting workplace IP rules
 
 ### Operational (OPS)
 
-- [ ] **OPS-01**: APScheduler configured with explicit `misfire_grace_time` — prevents silent job skipping
+- [x] **OPS-01**: APScheduler configured with explicit `misfire_grace_time` — prevents silent job skipping
 - [ ] **OPS-02**: `systemd` service unit template updated with correct `WorkingDirectory` and `StandardOutput`/`StandardError` paths
-- [ ] **OPS-03**: Log retention period increased from 7 to 30 days — improves audit trail for security tool
+- [x] **OPS-03**: Log retention period increased from 7 to 30 days — improves audit trail for security tool
 
 ## v2 Requirements (Deferred)
 
@@ -90,9 +90,9 @@
 | IDENT-01 | Phase 4 | Complete |
 | IDENT-02 | Phase 4 | Complete |
 | IDENT-03 | Phase 4 | Complete |
-| IDENT-04 | Phase 4 | Pending |
+| IDENT-04 | Phase 4 | Complete |
 | IDENT-05 | Phase 4 | Complete |
 | IDENT-06 | Phase 4 | Complete |
-| OPS-01 | Phase 5 | Pending |
+| OPS-01 | Phase 5 | Complete |
 | OPS-02 | Phase 5 | Pending |
-| OPS-03 | Phase 5 | Pending |
+| OPS-03 | Phase 5 | Complete |
