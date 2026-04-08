@@ -57,3 +57,31 @@ def test_main_exits_on_config_error(mocker):
     mock_scheduler = mocker.patch('main.BlockingScheduler')
     main()
     mock_scheduler.assert_not_called()
+
+
+def test_scheduler_configuration(mocker, mock_config):
+    """Verify scheduler is configured with misfire handling before jobs are added."""
+    mocker.patch('main.load_config', return_value=mock_config)
+    mocker.patch('main.reconfigure_logging')
+
+    mock_scheduler = mocker.MagicMock()
+    mocker.patch('main.BlockingScheduler', return_value=mock_scheduler)
+
+    # Prevent actual scheduler start which blocks
+    mock_scheduler.start.side_effect = KeyboardInterrupt
+
+    main()
+
+    # Verify configure() called with correct job_defaults
+    mock_scheduler.configure.assert_called_once()
+    configure_kwargs = mock_scheduler.configure.call_args[1]
+    job_defaults = configure_kwargs['job_defaults']
+    assert job_defaults['misfire_grace_time'] == 300
+    assert job_defaults['coalesce'] is True
+    assert job_defaults['max_instances'] == 1
+
+    # Verify configure() called before add_job()
+    call_order = [str(c) for c in mock_scheduler.method_calls]
+    configure_idx = next(i for i, c in enumerate(call_order) if 'configure' in c)
+    add_job_idx = next(i for i, c in enumerate(call_order) if 'add_job' in c)
+    assert configure_idx < add_job_idx, "configure() must be called before add_job()"
