@@ -4,6 +4,8 @@
 
 一个定时检测本地公网 IP 变化并自动更新云服务安全组白名单的工具。解决动态 IP 环境下安全访问云服务（数据库、应用端口）的问题，避免长期暴露敏感端口。支持华为云、腾讯云，可扩展其他云服务。部署为 systemd 服务长期运行。
 
+**生产就绪**: 已完成 5 个阶段的工程化重构，包括 IP 探测容错、配置健壮性、代码质量、项目标识和运维部署。73 个测试通过，96% 覆盖率。
+
 ## Core Value
 
 IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
@@ -22,29 +24,16 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 - ✓ YAML 配置 + Pydantic 校验 — existing
 - ✓ 日志轮转 — existing
 - ✓ CI/CD 测试流水线（GitHub Actions + GitLab CI） — existing
+- ✓ APScheduler misfire 处理配置（misfire_grace_time=300, coalesce=True） — Phase 05
+- ✓ 30 天日志保留（midnight rotation, backupCount=30） — Phase 05
+- ✓ systemd 服务单元模板（网络依赖、故障重启、正确路径） — Phase 05
+- ✓ README systemd 部署说明（安装、定制、管理、故障排除） — Phase 05
 
 ### Active
 
 <!-- 本次重构的目标 -->
 
-- ✓ IP 探测多 provider 降级链（ipinfo → icanhazip → ipify → ifconfig.me）— Phase 01
-- ✓ 网络请求 timeout 配置化（connect=3s, read=5s IP; connect=3s, read=10s cloud）— Phase 01
-- ✓ IP 返回值格式验证（ipaddress.ip_address）— Phase 01
-- ✓ 云 API 调用 tenacity 重试（3 次指数退避）— Phase 01
-- ✓ 安全组规则"先加后删"更新顺序 — Phase 01
-- ✓ get_rules 失败返回 [] 防止规则堆积 — Phase 01
-- ✓ huawei_cloud.add_rules 异常处理 — Phase 01
-- ✓ 项目重命名为 "Stay in Whitelist"（包名、imports、配置键名、注释全面更新）— Phase 04
-- ✓ 可配置 rule_prefix 实现 dev/prod 环境隔离 — Phase 04
-- ✓ 检查间隔改为可配置，默认 600 秒 (10 分钟) — Phase 02
-- ✓ 修复路径问题（ip_cache.txt、日志文件支持绝对路径，兼容 systemd）— Phase 02
-- ✓ 模块级 config 单例移除，改为显式 load_config() — Phase 02
-- ✓ Updater client 从类变量改为实例变量 — Phase 02
-- ✓ config.dict() 替换为属性迭代，消除 Pydantic 弃用 — Phase 02
-- ✓ print() 调用替换为 logger — Phase 03
-- ✓ 删除未使用的 config_loader.py — Phase 03
-- ✓ 修复 requirements.dev.txt 语法错误 — Phase 03
-- ✓ 日志审计确认无凭据泄漏 — Phase 03
+*All requirements validated. Project complete.*
 
 ### Out of Scope
 
@@ -94,6 +83,9 @@ IP 变了，白名单自动跟上 — 不漏更、不挂死、不锁死。
 | 默认检查间隔 10 分钟 | 用户从 3 分钟调整为 10 分钟，减少 API 调用频率，降低 rate limit 风险 | — Validated Phase 02 |
 | 多 IP 探测服务商降级 | IPinfo 免费额度不足，需要备用提供商保证可用性 | — Validated Phase 01 |
 | 项目重命名为 Stay in Whitelist | 与目录名对齐，更准确描述功能，支持 dev/prod 环境隔离 | — Validated Phase 04 |
+| APScheduler misfire 处理 | misfire_grace_time=300, coalesce=True, max_instances=1 防止静默跳过任务 | — Validated Phase 05 |
+| 30 天日志保留 | 满足安全审计需求，midnight rotation + backupCount=30 | — Validated Phase 05 |
+| systemd 服务单元模板 | 网络依赖、故障重启、正确路径，生产就绪部署 | — Validated Phase 05 |
 
 ## Evolution
 
@@ -113,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-07 after Phase 04 completion*
+*Last updated: 2026-04-08 after Phase 05 completion — Project production-ready*
