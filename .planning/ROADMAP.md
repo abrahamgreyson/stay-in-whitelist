@@ -101,7 +101,7 @@ Plans:
 Plans:
 - [x] 05-01-PLAN.md — Configure APScheduler misfire handling and extend log retention to 30 days (OPS-01, OPS-03)
 - [x] 05-02-PLAN.md — Create systemd service template with correct paths and validation tests (OPS-02)
-- [ ] 05-03-PLAN.md — Add comprehensive systemd deployment instructions to README (OPS-02)
+- [x] 05-03-PLAN.md — Add comprehensive systemd deployment instructions to README (OPS-02)
 
 ## Progress
 
