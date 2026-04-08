@@ -77,6 +77,14 @@ def main():
         reconfigure_logging(config.paths.log_file)
 
     scheduler = BlockingScheduler()
+
+    # Configure misfire handling to prevent silent job skipping
+    scheduler.configure(job_defaults={
+        'misfire_grace_time': 300,  # 5 minutes grace for 10-minute intervals
+        'coalesce': True,           # Combine missed runs into one
+        'max_instances': 1          # Prevent overlapping executions
+    })
+
     job = partial(check_and_update_ip, config=config)
     scheduler.add_job(job, 'interval', seconds=config.check_interval)
 
