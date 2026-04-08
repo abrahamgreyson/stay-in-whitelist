@@ -1,0 +1,49 @@
+# stay-in-whitelist.service
+# systemd service unit for Stay in Whitelist daemon
+#
+# Installation:
+#   1. Copy to /etc/systemd/system/stay-in-whitelist.service
+#   2. Edit paths below to match your deployment
+#   3. Run: sudo systemctl daemon-reload
+#   4. Run: sudo systemctl enable stay-in-whitelist
+#   5. Run: sudo systemctl start stay-in-whitelist
+
+[Unit]
+Description=Stay in Whitelist - Auto-update cloud security group whitelists
+Documentation=https://github.com/your-org/stay-in-whitelist
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# User and Group (uncomment and set to your user/group)
+# User=yourusername
+# Group=yourgroup
+
+# Working directory - UPDATE THIS PATH
+WorkingDirectory=/opt/stay-in-whitelist
+
+# Environment PATH to use virtual environment
+Environment="PATH=/opt/stay-in-whitelist/venv/bin:/usr/local/bin:/usr/bin:/bin"
+
+# Command to start the daemon - UPDATE THIS PATH
+ExecStart=/opt/stay-in-whitelist/venv/bin/python /opt/stay-in-whitelist/main.py
+
+# Logging - append to log file (Python's TimedRotatingFileHandler manages rotation)
+# UPDATE THIS PATH to match your deployment
+StandardOutput=append:/opt/stay-in-whitelist/stay_in_whitelist.log
+StandardError=append:/opt/stay-in-whitelist/stay_in_whitelist.log
+
+# Restart behavior
+Restart=on-failure
+RestartSec=5s
+
+# Security hardening (optional, uncomment if desired)
+# ProtectSystem=strict
+# ProtectHome=read-only
+# NoNewPrivileges=true
+# PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
