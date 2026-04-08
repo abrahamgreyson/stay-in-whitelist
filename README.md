@@ -155,6 +155,119 @@ timeouts:
 
 大多数情况下不需要调整。
 
+## 部署 (Deployment)
+
+### systemd 服务配置
+
+Stay in Whitelist 可以作为 systemd 服务长期运行，实现开机自启动和故障自动恢复。
+
+#### 1. 安装服务
+
+```bash
+# 复制服务模板到 systemd 目录
+sudo cp stay-in-whitelist.service /etc/systemd/system/
+
+# 编辑服务文件，自定义路径（重要！）
+sudo nano /etc/systemd/system/stay-in-whitelist.service
+```
+
+#### 2. 自定义路径
+
+在服务文件中修改以下路径为实际部署位置：
+
+```ini
+[Service]
+# 修改为项目实际路径
+WorkingDirectory=/home/yourusername/stay-in-whitelist
+ExecStart=/home/yourusername/stay-in-whitelist/venv/bin/python /home/yourusername/stay-in-whitelist/main.py
+
+# 修改日志路径（可选，默认使用项目内的 stay_in_whitelist.log）
+StandardOutput=append:/home/yourusername/stay-in-whitelist/stay_in_whitelist.log
+StandardError=append:/home/yourusername/stay-in-whitelist/stay_in_whitelist.log
+```
+
+**路径说明：**
+- `WorkingDirectory`: 项目根目录，包含 main.py 和 config.yaml
+- `ExecStart`: Python 解释器路径（venv/bin/python）和 main.py 完整路径
+- `StandardOutput`/`StandardError`: 日志文件路径，需确保有写入权限
+
+#### 3. 启动服务
+
+```bash
+# 重新加载 systemd 配置
+sudo systemctl daemon-reload
+
+# 启用开机自启动
+sudo systemctl enable stay-in-whitelist
+
+# 启动服务
+sudo systemctl start stay-in-whitelist
+
+# 查看服务状态
+sudo systemctl status stay-in-whitelist
+```
+
+#### 4. 服务管理
+
+```bash
+# 查看实时日志
+sudo journalctl -u stay-in-whitelist -f
+
+# 查看最近 100 行日志
+sudo journalctl -u stay-in-whitelist -n 100
+
+# 停止服务
+sudo systemctl stop stay-in-whitelist
+
+# 重启服务
+sudo systemctl restart stay-in-whitelist
+
+# 禁用开机自启动
+sudo systemctl disable stay-in-whitelist
+```
+
+### 日志管理
+
+服务运行后，日志文件位于项目根目录的 `stay_in_whitelist.log`。
+
+**日志轮转配置：**
+- 每日午夜自动轮转
+- 保留最近 30 天的日志文件
+- 旧日志自动删除，避免磁盘占用过多
+
+**查看日志文件：**
+```bash
+# 查看当前日志
+tail -f stay_in_whitelist.log
+
+# 查看历史日志（轮转后的备份）
+ls -lh stay_in_whitelist.log*
+```
+
+### 故障排查
+
+**服务无法启动：**
+1. 检查路径配置是否正确（WorkingDirectory、ExecStart）
+2. 检查 Python 虚拟环境是否存在：`ls venv/bin/python`
+3. 检查 config.yaml 是否存在且格式正确
+4. 查看详细错误日志：`sudo journalctl -u stay-in-whitelist -n 50`
+
+**IP 检测失败：**
+1. 检查网络连接：`ping ipinfo.io`
+2. 检查 config.yaml 中的 IP 检测服务配置
+3. 查看日志中的错误信息
+
+**云服务白名单未更新：**
+1. 检查 config.yaml 中的云服务凭证是否正确
+2. 检查安全组 ID 和区域配置
+3. 确认 rule_prefix 配置正确（默认 "from Wulihe"）
+4. 查看日志中的 API 调用结果
+
+**日志文件过大：**
+- 日志会自动轮转，保留最近 30 天
+- 如果需要手动清理：`rm stay_in_whitelist.log.[N]`（N > 30）
+- 检查日志轮转是否正常：`ls -lh stay_in_whitelist.log*`
+
 ## 架构
 
 ```
@@ -187,38 +300,6 @@ stay_in_whitelist/
 - `delete_rules()` -- 删除安全组规则
 
 扩展其他云服务时，在 `stay_in_whitelist/cloud_providers/` 目录下新增实现即可。
-
-## 部署
-
-### systemd 服务
-
-```ini
-[Unit]
-Description=Stay in Whitelist - IP whitelist auto-updater
-After=network.target
-
-[Service]
-ExecStart=/usr/bin/python3 /path/to/stay-in-whitelist/main.py
-WorkingDirectory=/path/to/stay-in-whitelist/
-StandardOutput=null
-StandardError=null
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo vim /etc/systemd/system/stay-in-whitelist.service
-sudo systemctl daemon-reload
-sudo systemctl start stay-in-whitelist
-sudo systemctl enable stay-in-whitelist
-sudo systemctl status stay-in-whitelist
-```
-
-### 日志管理
-
-日志使用 `TimedRotatingFileHandler`，每 24 小时轮转一次，保留 7 个备份文件。日志文件默认为项目目录下的 `stay_in_whitelist.log`。
 
 ## 迁移指南
 
