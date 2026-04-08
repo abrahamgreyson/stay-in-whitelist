@@ -23,7 +23,12 @@ def get_logger(name=__name__):
         ch.setLevel(logging.DEBUG)
 
         # 创建一个文件处理器，每小时轮转一次日志文件
-        fh = TimedRotatingFileHandler('stay_in_whitelist.log', when='H', interval=24, backupCount=7)
+        fh = TimedRotatingFileHandler(
+            filename='stay_in_whitelist.log',
+            when='midnight',      # Rotate at midnight each day
+            interval=1,           # Every 1 day
+            backupCount=30        # Keep 30 days of logs
+        )
         fh.setLevel(logging.DEBUG)
 
         # 创建一个格式器，并添加到处理器中
@@ -50,7 +55,12 @@ def reconfigure_logging(log_file_path: str) -> None:
             h.close()
             log.removeHandler(h)
         if old_handlers:
-            fh = TimedRotatingFileHandler(log_file_path, when='H', interval=24, backupCount=7)
+            fh = TimedRotatingFileHandler(
+                filename=log_file_path,
+                when='midnight',
+                interval=1,
+                backupCount=30
+            )
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
             log.addHandler(fh)
