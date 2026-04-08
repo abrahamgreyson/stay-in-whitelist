@@ -43,7 +43,7 @@
 ### Operational (OPS)
 
 - [x] **OPS-01**: APScheduler configured with explicit `misfire_grace_time` — prevents silent job skipping
-- [ ] **OPS-02**: `systemd` service unit template updated with correct `WorkingDirectory` and `StandardOutput`/`StandardError` paths
+- [x] **OPS-02**: `systemd` service unit template updated with correct `WorkingDirectory` and `StandardOutput`/`StandardError` paths
 - [x] **OPS-03**: Log retention period increased from 7 to 30 days — improves audit trail for security tool
 
 ## v2 Requirements (Deferred)
@@ -94,5 +94,5 @@
 | IDENT-05 | Phase 4 | Complete |
 | IDENT-06 | Phase 4 | Complete |
 | OPS-01 | Phase 5 | Complete |
-| OPS-02 | Phase 5 | Pending |
+| OPS-02 | Phase 5 | Complete |
 | OPS-03 | Phase 5 | Complete |
