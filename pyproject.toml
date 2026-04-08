@@ -10,6 +10,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 description = "A tool to update cloud provider whitelists"
 requires-python = ">=3.9"
@@ -17,7 +19,7 @@ dependencies = [
     "pyyaml~=6.0.1",
     "huaweicloudsdkcore~=3.1.99",
     "huaweicloudsdkvpc~=3.1.99",
-    "pydantic~=2.7.4",
+    "pydantic~=2.9.2",
     "requests~=2.32.3",
     "tenacity~=9.0.0",
     "APScheduler~=3.10.4",
