@@ -5,6 +5,7 @@ Date: 2024/6/13 16:40:14
 程序入口，用于定期检查 IP 地址变化，并更新云提供商的白名单
 """
 
+import argparse
 from functools import partial
 
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -63,6 +64,10 @@ def main():
     """
     启动定时任务
     """
+    parser = argparse.ArgumentParser(description='Stay in Whitelist - 自动更新云服务安全组白名单')
+    parser.add_argument('--debug', action='store_true', help='调试模式：跳过定时器，直接执行一次检查后退出')
+    args, _ = parser.parse_known_args()
+
     try:
         config = load_config()
     except (FileNotFoundError, ValueError) as e:
@@ -75,6 +80,14 @@ def main():
     # Reconfigure logger if custom log path specified
     if config.paths.log_file:
         reconfigure_logging(config.paths.log_file)
+
+    # Debug mode: run once and exit
+    if args.debug:
+        logger.info("调试模式：执行一次检查后退出")
+        check_and_update_ip(config)
+        return
+
+    logger.info(f"Stay in Whitelist 已启动，每 {config.check_interval} 秒检查一次 IP 变化")
 
     scheduler = BlockingScheduler()
 
@@ -91,7 +104,7 @@ def main():
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
-        pass
+        logger.info("Stay in Whitelist 已停止")
 
 
 if __name__ == "__main__":

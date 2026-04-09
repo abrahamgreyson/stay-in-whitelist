@@ -4,7 +4,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/abrahamgreyson/update-whitelist/badge)](https://www.codefactor.io/repository/github/abrahamgreyson/update-whitelist)
 [![Test](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml/badge.svg)](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml)
 [![Codecov](https://codecov.io/gh/abrahamgreyson/update-whitelist/branch/main/graph/badge.svg?token=Fc4MbBmMpZ)](https://codecov.io/gh/abrahamgreyson/update-whitelist?branch=main)
-[![Python versions](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12-blue)](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml)
+[![Python versions](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12%7C3.13%7C3.14-blue)](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml)
 
 定时检测本地公网 IP 变化，自动更新云服务安全组白名单。
 
@@ -43,12 +43,23 @@ cp config.example.yaml config.yaml
 ### 3. 运行
 
 ```bash
-# 前台运行（调试用，带控制台输出）
+# 安装后直接运行（推荐）
+stay-in-whitelist
+
+# 或通过 Python 运行
 python main.py
 
+# 调试模式：跳过定时器，执行一次检查后退出
+stay-in-whitelist --debug
+python main.py --debug
+
 # 后台运行
-nohup python main.py > /dev/null 2>&1 &
+nohup stay-in-whitelist > /dev/null 2>&1 &
 ```
+
+**运行模式说明：**
+- **正常模式**：启动后打印 `Stay in Whitelist 已启动，每 600 秒检查一次 IP 变化`，然后进入定时调度循环
+- **调试模式** (`--debug`)：跳过定时器，立即执行一次 IP 检查和白名单更新后退出，适合开发调试和首次验证配置
 
 ## 配置说明
 
@@ -179,7 +190,7 @@ sudo nano /etc/systemd/system/stay-in-whitelist.service
 [Service]
 # 修改为项目实际路径
 WorkingDirectory=/home/yourusername/stay-in-whitelist
-ExecStart=/home/yourusername/stay-in-whitelist/venv/bin/python /home/yourusername/stay-in-whitelist/main.py
+ExecStart=/home/yourusername/stay-in-whitelist/venv/bin/stay-in-whitelist
 
 # 修改日志路径（可选，默认使用项目内的 stay_in_whitelist.log）
 StandardOutput=append:/home/yourusername/stay-in-whitelist/stay_in_whitelist.log
@@ -331,7 +342,7 @@ pytest
 pytest --cov=stay_in_whitelist
 ```
 
-Python 版本支持：3.9、3.10、3.11、3.12。
+Python 版本支持：3.9、3.10、3.11、3.12、3.13、3.14。
 
 ## 许可证
 
