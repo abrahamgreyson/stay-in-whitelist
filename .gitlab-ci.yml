@@ -1,4 +1,4 @@
-image: 'atomhub.openatom.cn/amd64/python:3.12-rc'
+image: 'python:3.12-slim'
 
 stages:
   - prepare
