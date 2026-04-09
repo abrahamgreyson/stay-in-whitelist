@@ -1,10 +1,10 @@
 # Stay in Whitelist
 
 [![License](https://img.shields.io/github/license/abrahamgreyson/stay-in-whitelist.svg?)](https://opensource.org/license/mit)
-[![CodeFactor](https://www.codefactor.io/repository/github/abrahamgreyson/stay-in-whitelist/badge)](https://www.codefactor.io/repository/github/abrahamgreyson/stay-in-whitelist)
+[![GitHub tag](https://img.shields.io/github/v/tag/abrahamgreyson/stay-in-whitelist?label=version)](https://github.com/abrahamgreyson/stay-in-whitelist/tags)
 [![Test](https://github.com/abrahamgreyson/stay-in-whitelist/actions/workflows/test.yml/badge.svg)](https://github.com/abrahamgreyson/stay-in-whitelist/actions/workflows/test.yml)
 [![Codecov](https://codecov.io/gh/abrahamgreyson/stay-in-whitelist/branch/main/graph/badge.svg?token=Fc4MbBmMpZ)](https://codecov.io/gh/abrahamgreyson/stay-in-whitelist?branch=main)
-[![Python versions](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12%7C3.13%7C3.14-blue)](https://github.com/abrahamgreyson/stay-in-whitelist/actions/workflows/test.yml)
+[![Python versions](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12%7C3.13-blue)](https://github.com/abrahamgreyson/stay-in-whitelist/actions/workflows/test.yml)
 
 定时检测本地公网 IP 变化，自动更新云服务安全组白名单。
 
