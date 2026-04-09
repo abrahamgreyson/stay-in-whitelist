@@ -3,7 +3,6 @@ Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/25 11:34:49
 """
 
-import pytest
 from stay_in_whitelist.cli import has_ip_changed, check_and_update_ip, main, look_at_rules
 
 
@@ -115,7 +114,7 @@ def test_look_at_rules_tencent(mocker, mock_config):
     ]
 
     captured = []
-    mocker.patch('builtins.print', side_effect=lambda *a, **kw: captured.append(' '.join(str(x) for x in a)))
+    mocker.patch('builtins.print', side_effect=lambda *a, **_: captured.append(' '.join(str(x) for x in a)))
 
     look_at_rules(mock_config, mock_updater)
 
@@ -131,7 +130,7 @@ def test_look_at_rules_empty_sg(mocker, mock_config):
     mock_updater.fetch_security_group_rules.return_value = []
 
     captured = []
-    mocker.patch('builtins.print', side_effect=lambda *a, **kw: captured.append(' '.join(str(x) for x in a)))
+    mocker.patch('builtins.print', side_effect=lambda *a, **_: captured.append(' '.join(str(x) for x in a)))
 
     look_at_rules(mock_config, mock_updater)
 
