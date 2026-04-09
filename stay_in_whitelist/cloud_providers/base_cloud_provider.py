@@ -54,6 +54,9 @@ class BaseCloudProvider(ABC):
                 Error code: {e.error_code}
                 Error message: {e.error_msg}
                 """
+            if e.status_code == 409:
+                logger.warning(error_message.strip())
+                return
         # 腾讯
         elif isinstance(e, TencentCloudSDKException):
             error_message = f"""
