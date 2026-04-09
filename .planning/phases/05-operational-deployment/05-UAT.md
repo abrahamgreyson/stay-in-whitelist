@@ -23,7 +23,9 @@ resolution: "Fixed by plan 05-04: upgraded pydantic to 2.9.2 for Python 3.13+ su
 
 ### 2. Scheduler Misfire Recovery
 expected: When the scheduled job misses its execution time (e.g., system was suspended), the job runs within 5 minutes of the scheduled time instead of being silently skipped. Check the logs to confirm the misfire_grace_time=300 configuration is active.
-result: [pending]
+result: issue
+reported: "应用启动后 IP 检测和云 API 调用正常，但添加安全组规则时报错 'Allow' object has no attribute 'get'。同时 IP 检测结果不一致（requests 检测到 50.7.158.254，curl 显示 119.119.70.48），可能是 Clash 代理导致。"
+severity: blocker
 
 ### 3. 30-Day Log Retention
 expected: Log files are retained for 30 days and rotate daily at midnight. Check that the logger configuration uses backupCount=30 and when='midnight' rotation. Older log files beyond 30 days are automatically deleted.
@@ -49,8 +51,8 @@ result: [pending]
 
 total: 7
 passed: 1
-issues: 0
-pending: 6
+issues: 1
+pending: 5
 skipped: 0
 blocked: 0
 
@@ -65,3 +67,11 @@ blocked: 0
   missing: ["pydantic version that supports Python 3.13+"]
   resolution: "Upgraded pydantic to 2.9.2 via gap closure plan 05-04. All 73 tests pass on Python 3.13.11. Application imports successfully. Python 3.13, 3.14 added to classifiers."
   resolved_by: 05-04-PLAN.md
+
+- truth: "Security group rules can be added without errors"
+  status: failed
+  reason: "User reported: 'Allow' object has no attribute 'get' when adding security group rules. Likely caused by pydantic 2.9.2 upgrade - Pydantic BaseModel no longer has .get() method."
+  severity: blocker
+  test: 2
+  artifacts: []
+  missing: []

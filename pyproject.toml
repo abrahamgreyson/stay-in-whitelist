@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.scripts]
-stay-in-whitelist = "main:main"
+stay-in-whitelist = "stay_in_whitelist.cli:main"
 
 [project.optional-dependencies]
 dev = [
