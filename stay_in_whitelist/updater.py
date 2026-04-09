@@ -70,10 +70,10 @@ class Updater:
 
         # ADD new rules FIRST (D-13)
         logger.info(f"添加安全组 {sg} 的规则...")
-        self._call_with_retry(self.client.add_rules, sg, rules, ip)
+        add_result = self._call_with_retry(self.client.add_rules, sg, rules, ip)
 
         # DELETE old rules SECOND (only after new rules are in place)
-        if existed_rules:
+        if add_result and existed_rules:
             logger.info(f"有符合条件的规则，删除安全组 {sg} 的所有规则...")
             self._call_with_retry(self.client.delete_rules, sg, existed_rules)
         else:

@@ -34,8 +34,8 @@ class HuaweiCloud(BaseCloudProvider):
             BaseCloudProvider.log(e)
         return None
 
-    def add_rules(self, group_id, rules, ip):
-        """ 批量添加规则 """
+    def add_rules(self, group_id, rules, ip) -> bool:
+        """ 批量添加规则。成功返回 True；404/409 返回 False；其他异常向上传播。 """
         try:
             request = BatchCreateSecurityGroupRulesRequest()
             request.security_group_id = group_id
@@ -53,8 +53,13 @@ class HuaweiCloud(BaseCloudProvider):
             )
             response = self.client.batch_create_security_group_rules(request)
             logger.info(f"Added {len(rules)} rules to {group_id}")
+            return True
         except exceptions.ClientRequestException as e:
+            if e.status_code in (404, 409):
+                BaseCloudProvider.log(e)
+                return False
             BaseCloudProvider.log(e)
+            raise
 
     def initialize_client(self):
         """ 初始化客户端 """

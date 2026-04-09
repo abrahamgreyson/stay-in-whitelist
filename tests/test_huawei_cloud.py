@@ -83,8 +83,9 @@ def test_get_rules_returns_empty_list_on_error(mocker):
 
 
 def test_add_rules_catches_exception(mocker):
-    """add_rules() should catch ClientRequestException and log it without crashing"""
+    """add_rules() 遇到 404/409 时返回 False，遇到其他状态码时抛出异常"""
     from huaweicloudsdkcore.exceptions.exceptions import SdkError
+    import pytest
     mock_vpc_client = mocker.MagicMock()
     mock_vpc_client.batch_create_security_group_rules.side_effect = exceptions.ClientRequestException(
         500, SdkError(request_id="test", error_code="test", error_msg="test error")
@@ -93,6 +94,45 @@ def test_add_rules_catches_exception(mocker):
     mock_log = mocker.patch('stay_in_whitelist.cloud_providers.huawei_cloud.BaseCloudProvider.log')
     huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
     huawei_cloud.client = mock_vpc_client
-    # Should NOT raise -- exception is caught internally
-    huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
+    # 500 (非 404/409) 应当向上抛出
+    with pytest.raises(exceptions.ClientRequestException):
+        huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
     mock_log.assert_called_once()
+
+
+def test_add_rules_returns_false_on_409(mocker):
+    """add_rules() 遇到 409（规则已存在）时返回 False，不抛出异常。"""
+    from huaweicloudsdkcore.exceptions.exceptions import SdkError
+    mock_vpc_client = mocker.MagicMock()
+    mock_vpc_client.batch_create_security_group_rules.side_effect = exceptions.ClientRequestException(
+        409, SdkError(request_id="test", error_code="Conflict", error_msg="rule already exists")
+    )
+    mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
+    huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
+    huawei_cloud.client = mock_vpc_client
+    result = huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
+    assert result is False
+
+
+def test_add_rules_returns_false_on_404(mocker):
+    """add_rules() 遇到 404（安全组不存在）时返回 False，不抛出异常。"""
+    from huaweicloudsdkcore.exceptions.exceptions import SdkError
+    mock_vpc_client = mocker.MagicMock()
+    mock_vpc_client.batch_create_security_group_rules.side_effect = exceptions.ClientRequestException(
+        404, SdkError(request_id="test", error_code="NotFound", error_msg="security group not found")
+    )
+    mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
+    huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
+    huawei_cloud.client = mock_vpc_client
+    result = huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
+    assert result is False
+
+
+def test_add_rules_returns_true_on_success(mocker):
+    """add_rules() 成功时返回 True。"""
+    mock_vpc_client = mocker.MagicMock()
+    mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
+    huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
+    huawei_cloud.client = mock_vpc_client
+    result = huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
+    assert result is True

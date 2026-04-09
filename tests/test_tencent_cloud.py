@@ -125,3 +125,39 @@ def test_get_rules_filters_by_prefix(mocker):
     rules = tencent_cloud.get_rules('group_id')
     assert len(rules) == 1
     assert rules[0]['PolicyDescription'] == 'from Wulihe'
+
+
+def test_add_rules_returns_true_on_success(mocker):
+    """add_rules() 成功时返回 True。"""
+    mock_vpc_client = mocker.MagicMock()
+    mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
+    tencent_cloud = TencentCloud('access_key', 'secret_key', 'region')
+    tencent_cloud.client = mock_vpc_client
+    result = tencent_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
+    assert result is True
+
+
+def test_add_rules_returns_false_on_sg_not_found(mocker):
+    """add_rules() 遇到 InvalidSecurityGroupID.NotFound 时返回 False，不抛出异常。"""
+    mock_vpc_client = mocker.MagicMock()
+    mock_vpc_client.CreateSecurityGroupPolicies.side_effect = TencentCloudSDKException(
+        "InvalidSecurityGroupID.NotFound", "security group not found"
+    )
+    mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
+    tencent_cloud = TencentCloud('access_key', 'secret_key', 'region')
+    tencent_cloud.client = mock_vpc_client
+    result = tencent_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
+    assert result is False
+
+
+def test_add_rules_raises_on_other_error(mocker):
+    """add_rules() 遇到非 InvalidSecurityGroupID.NotFound 的异常时向上传播。"""
+    mock_vpc_client = mocker.MagicMock()
+    mock_vpc_client.CreateSecurityGroupPolicies.side_effect = TencentCloudSDKException(
+        "InternalError", "internal server error"
+    )
+    mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
+    tencent_cloud = TencentCloud('access_key', 'secret_key', 'region')
+    tencent_cloud.client = mock_vpc_client
+    with pytest.raises(TencentCloudSDKException):
+        tencent_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
