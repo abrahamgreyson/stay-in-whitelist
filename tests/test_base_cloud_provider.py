@@ -40,3 +40,39 @@ def test_base_cloud_provider(mocker):
     assert hasattr(mock_cloud_provider, 'delete_rules')
     assert hasattr(mock_cloud_provider, 'add_rules')
     assert hasattr(mock_cloud_provider, 'get_rules')
+
+
+# --- New contract tests (Task 1) ---
+
+def test_is_sg_not_found_with_huawei_404():
+    """is_sg_not_found() returns True for Huawei 404 ClientRequestException."""
+    from huaweicloudsdkcore.exceptions.exceptions import ClientRequestException, SdkError
+    e = ClientRequestException(404, SdkError(request_id="r", error_code="c", error_msg="m"))
+    assert BaseCloudProvider.is_sg_not_found(e) is True
+
+
+def test_is_sg_not_found_with_huawei_non_404():
+    """is_sg_not_found() returns False for Huawei non-404 ClientRequestException."""
+    from huaweicloudsdkcore.exceptions.exceptions import ClientRequestException, SdkError
+    e = ClientRequestException(500, SdkError(request_id="r", error_code="c", error_msg="m"))
+    assert BaseCloudProvider.is_sg_not_found(e) is False
+
+
+def test_is_sg_not_found_with_tencent_sg_not_found():
+    """is_sg_not_found() returns True for Tencent InvalidSecurityGroupID.NotFound exception."""
+    from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+    e = TencentCloudSDKException(code="InvalidSecurityGroupID.NotFound", message="not found")
+    assert BaseCloudProvider.is_sg_not_found(e) is True
+
+
+def test_is_sg_not_found_with_tencent_other_error():
+    """is_sg_not_found() returns False for Tencent non-sg-not-found exception."""
+    from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+    e = TencentCloudSDKException(code="InternalError", message="internal error")
+    assert BaseCloudProvider.is_sg_not_found(e) is False
+
+
+def test_is_sg_not_found_with_generic_exception():
+    """is_sg_not_found() returns False for generic Python exceptions."""
+    e = ValueError("some error")
+    assert BaseCloudProvider.is_sg_not_found(e) is False
