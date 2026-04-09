@@ -11,7 +11,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 from stay_in_whitelist.config.config import load_config
 from stay_in_whitelist.ip_fetcher import get_current_ip, load_cached_ip, cache_ip
-from stay_in_whitelist.updater import Updater
+from stay_in_whitelist.updater import Updater, CLOUD_PROVIDER_FIELDS
 from stay_in_whitelist.logger import get_logger, reconfigure_logging
 import requests
 
@@ -60,6 +60,67 @@ def check_and_update_ip(config):
         logger.error(f"更新云服务白名单出错: {e}")
 
 
+def look_at_rules(config, updater):
+    """
+    只读模式：枚举所有已配置的安全组现有规则并以表格形式打印到 stdout。
+    不修改任何规则，不影响 IP 缓存，不启动调度器。
+    """
+    for provider_name in CLOUD_PROVIDER_FIELDS:
+        provider_config = getattr(config, provider_name, None)
+        if provider_config is None:
+            continue
+
+        access_key = provider_config.access_key
+        secret_key = provider_config.secret_key
+
+        for region_config in provider_config.regions:
+            region = region_config.region
+            for rule in region_config.rules:
+                sg = rule.sg
+                print(f"Provider: {provider_name}  Region: {region}  SG: {sg}")
+
+                updater.set_client(provider_name, access_key, secret_key, region, config.rule_prefix)
+                rules = updater.fetch_security_group_rules(sg)
+
+                if not rules:
+                    print("  (无符合条件的规则)")
+                    continue
+
+                # Determine column widths dynamically
+                rows = []
+                for r in rules:
+                    if isinstance(r, dict):
+                        port = str(r.get('Port', '-'))
+                        cidr = str(r.get('CidrBlock', '-'))
+                        index = str(r.get('PolicyIndex', '-'))
+                        desc = str(r.get('PolicyDescription', '-'))
+                    else:
+                        port = str(getattr(r, 'multiport', '-'))
+                        cidr = str(getattr(r, 'remote_ip_prefix', '-'))
+                        index = str(getattr(r, 'id', '-'))
+                        desc = str(getattr(r, 'description', '-'))
+                    rows.append((port, cidr, index, desc))
+
+                headers = ('Port', 'IP/CIDR', 'Index', 'Description')
+                col_widths = [
+                    max(len(headers[i]), max(len(row[i]) for row in rows))
+                    for i in range(4)
+                ]
+
+                def fmt_row(fields):
+                    return '| ' + ' | '.join(
+                        f.ljust(col_widths[i]) for i, f in enumerate(fields)
+                    ) + ' |'
+
+                separator = '+-' + '-+-'.join('-' * w for w in col_widths) + '-+'
+                print(separator)
+                print(fmt_row(headers))
+                print(separator)
+                for row in rows:
+                    print(fmt_row(row))
+                print(separator)
+
+
 def main():
     """
     启动定时任务
@@ -67,6 +128,7 @@ def main():
     parser = argparse.ArgumentParser(description='Stay in Whitelist - 自动更新云服务安全组白名单')
     parser.add_argument('--debug', action='store_true', help='调试模式：跳过定时器，直接执行一次检查后退出')
     parser.add_argument('--force', action='store_true', help='强制更新：清空 IP 缓存，强制触发白名单更新')
+    parser.add_argument('--look', action='store_true', help='查看模式：打印所有安全组现有规则后退出')
     args, _ = parser.parse_known_args()
 
     try:
@@ -81,6 +143,13 @@ def main():
     # Reconfigure logger if custom log path specified
     if config.paths.log_file:
         reconfigure_logging(config.paths.log_file)
+
+    # Look mode: read-only, enumerate all rules and exit.
+    # Must be checked BEFORE --force to ensure full mutual exclusivity.
+    if args.look:
+        updater = Updater()
+        look_at_rules(config, updater)
+        return
 
     # Force mode: clear IP cache to trigger update
     if args.force:
