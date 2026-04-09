@@ -3,6 +3,7 @@ Stay in Whitelist CLI - 自动更新云服务安全组白名单
 """
 
 import argparse
+import fcntl
 import os
 from functools import partial
 
@@ -95,6 +96,16 @@ def main():
         return
 
     logger.info(f"Stay in Whitelist 已启动，每 {config.check_interval} 秒检查一次 IP 变化")
+
+    # 防止多进程并发：抢占文件锁，已有实例运行时直接退出
+    lock_path = '/tmp/stay-in-whitelist.lock'
+    lock_file = open(lock_path, 'w')
+    try:
+        fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        logger.error("另一个 Stay in Whitelist 实例正在运行，退出")
+        lock_file.close()
+        return
 
     scheduler = BlockingScheduler()
 
