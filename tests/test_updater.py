@@ -152,7 +152,7 @@ def test_set_client(mocker):
         updater.set_client('unsupported', 'key', 'secret', 'region', 'from Wulihe')
 
 
-def test_fetch_security_group_rules_returns_empty_list_on_error(mocker):
+def test_fetch_security_group_rules_propagates_exception(mocker):
     """fetch_security_group_rules must propagate exception (not swallow it)."""
     updater = Updater()
     updater.client = Mock()
