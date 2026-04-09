@@ -221,3 +221,25 @@ def test_no_retry_on_non_network_error(mocker):
         updater.update_security_group_rules('sg1', ['allow1'], '127.0.0.1')
 
     assert call_count['n'] == 1, f"Expected exactly 1 attempt (no retry), got {call_count['n']}"
+
+
+def test_delete_skipped_when_add_returns_false(mocker):
+    """当 add_rules 返回 False（如 409 幂等），delete_rules 不被调用。"""
+    updater = Updater()
+    updater.client = Mock()
+    updater.client.add_rules.return_value = False
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=['rule1'])
+    mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater.update_security_group_rules('sg1', ['allow1'], '127.0.0.1')
+    updater.client.delete_rules.assert_not_called()
+
+
+def test_delete_called_when_add_returns_true(mocker):
+    """当 add_rules 返回 True（成功写入），且有旧规则时，delete_rules 被调用。"""
+    updater = Updater()
+    updater.client = Mock()
+    updater.client.add_rules.return_value = True
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=['rule1'])
+    mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater.update_security_group_rules('sg1', ['allow1'], '127.0.0.1')
+    updater.client.delete_rules.assert_called_once_with('sg1', ['rule1'])
