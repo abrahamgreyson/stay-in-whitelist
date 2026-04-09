@@ -62,15 +62,17 @@ def test_delete_rules(mocker):
 
 
 def test_get_rules_returns_empty_list_on_error(mocker):
-    """get_rules() should return [] (not None) when TencentCloudSDKException is raised"""
+    """get_rules() raises TencentCloudSDKException for non-sg-not-found errors."""
     mock_vpc_client = mocker.MagicMock()
-    mock_vpc_client.DescribeSecurityGroupPolicies.side_effect = TencentCloudSDKException("test error")
+    mock_vpc_client.DescribeSecurityGroupPolicies.side_effect = TencentCloudSDKException(
+        code="InternalError",
+        message="internal server error"
+    )
     mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
     tencent_cloud = TencentCloud('access_key', 'secret_key', 'region')
     tencent_cloud.client = mock_vpc_client
-    result = tencent_cloud.get_rules('group_id')
-    assert result == []
-    assert result is not None
+    with pytest.raises(TencentCloudSDKException):
+        tencent_cloud.get_rules('group_id')
 
 
 def test_get_rules_with_custom_prefix(mocker):

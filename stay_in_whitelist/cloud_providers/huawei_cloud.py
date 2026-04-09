@@ -54,7 +54,15 @@ class HuaweiCloud(BaseCloudProvider):
             response = self.client.batch_create_security_group_rules(request)
             logger.info(f"Added {len(rules)} rules to {group_id}")
         except exceptions.ClientRequestException as e:
-            BaseCloudProvider.log(e)
+            if e.status_code == 404:
+                logger.warning(f"安全组 {group_id} 不存在，跳过添加规则")
+                return
+            elif e.status_code == 409:
+                BaseCloudProvider.log(e)  # logs as warning, rule already exists
+                return
+            else:
+                BaseCloudProvider.log(e)
+                raise
 
     def initialize_client(self):
         """ 初始化客户端 """
@@ -86,6 +94,10 @@ class HuaweiCloud(BaseCloudProvider):
             ]
 
         except exceptions.ClientRequestException as e:
-            BaseCloudProvider.log(e)
-            return []
+            if e.status_code == 404:
+                logger.warning(f"安全组 {group_id} 不存在，跳过")
+                return None
+            else:
+                BaseCloudProvider.log(e)
+                raise
 

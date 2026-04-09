@@ -67,6 +67,15 @@ class BaseCloudProvider(ABC):
 
         logger.error(error_message.strip())
 
+    @staticmethod
+    def is_sg_not_found(e: Exception) -> bool:
+        """判断异常是否表示安全组不存在（华为 404 / 腾讯 InvalidSecurityGroupID.NotFound）。"""
+        if isinstance(e, ClientRequestException) and e.status_code == 404:
+            return True
+        if isinstance(e, TencentCloudSDKException) and e.get_code() == 'InvalidSecurityGroupID.NotFound':
+            return True
+        return False
+
     @abstractmethod
     def initialize_client(self):
         """

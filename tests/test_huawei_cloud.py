@@ -69,7 +69,7 @@ def test_add_rules(mocker):
 
 
 def test_get_rules_returns_empty_list_on_error(mocker):
-    """get_rules() should return [] (not None) when ClientRequestException is raised"""
+    """get_rules() raises ClientRequestException for non-404 errors (not swallows them)."""
     from huaweicloudsdkcore.exceptions.exceptions import SdkError
     mock_vpc_client = mocker.MagicMock()
     mock_vpc_client.list_security_group_rules.side_effect = exceptions.ClientRequestException(
@@ -78,28 +78,22 @@ def test_get_rules_returns_empty_list_on_error(mocker):
     mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
     huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
     huawei_cloud.client = mock_vpc_client
-    result = huawei_cloud.get_rules('group_id')
-    assert result == []
-    assert result is not None
+    with pytest.raises(exceptions.ClientRequestException):
+        huawei_cloud.get_rules('group_id')
 
 
 def test_add_rules_catches_exception(mocker):
-    """add_rules() should catch ClientRequestException and log it without crashing"""
+    """add_rules() raises ClientRequestException for non-404/non-409 errors."""
     from huaweicloudsdkcore.exceptions.exceptions import SdkError
     mock_vpc_client = mocker.MagicMock()
     mock_vpc_client.batch_create_security_group_rules.side_effect = exceptions.ClientRequestException(
         500, SdkError(request_id="test", error_code="test", error_msg="test error")
     )
     mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
-    mock_log = mocker.patch('stay_in_whitelist.cloud_providers.huawei_cloud.BaseCloudProvider.log')
     huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
     huawei_cloud.client = mock_vpc_client
-    # Should NOT raise -- exception is caught internally
-    huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
-    mock_log.assert_called_once()
-
-
-# --- New contract tests (Task 1) ---
+    with pytest.raises(exceptions.ClientRequestException):
+        huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
 
 def test_get_rules_returns_none_on_404(mocker):
     """get_rules() returns None (not []) when 404 ClientRequestException is raised."""
