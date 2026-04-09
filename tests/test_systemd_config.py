@@ -42,14 +42,14 @@ def test_service_paths_consistency():
 
     assert working_dir, "WorkingDirectory not found"
 
-    # Verify ExecStart references the same directory
+    # Verify ExecStart references the same directory and uses the entry point
     for line in content.split('\n'):
         if line.startswith('ExecStart='):
             exec_start = line.split('=', 1)[1].strip()
             assert working_dir in exec_start, \
                 f"ExecStart path doesn't match WorkingDirectory: {exec_start}"
-            assert "main.py" in exec_start, \
-                f"ExecStart should reference main.py: {exec_start}"
+            assert "stay-in-whitelist" in exec_start, \
+                f"ExecStart should reference stay-in-whitelist entry point: {exec_start}"
             break
 
 
@@ -76,20 +76,17 @@ def test_service_restart_configuration():
 
 
 def test_service_logging_configuration():
-    """Verify logging paths reference correct log file."""
+    """Verify logging is handled by Python, not redirected by systemd."""
     service_file = Path(__file__).parent.parent / "stay-in-whitelist.service"
     content = service_file.read_text()
 
-    # Check that logging references stay_in_whitelist.log (not old name)
+    # StandardOutput/StandardError must NOT redirect to the log file.
+    # Python's TimedRotatingFileHandler writes directly; systemd capturing stdout
+    # to the same file causes duplicate log entries.
     stdout_lines = [l for l in content.split('\n') if l.startswith('StandardOutput=')]
     stderr_lines = [l for l in content.split('\n') if l.startswith('StandardError=')]
 
-    assert len(stdout_lines) > 0, "StandardOutput not configured"
-    assert len(stderr_lines) > 0, "StandardError not configured"
-
-    # Verify log file name
-    for line in stdout_lines + stderr_lines:
-        assert "stay_in_whitelist.log" in line, \
-            f"Log path should reference stay_in_whitelist.log: {line}"
-        assert "update_whitelist.log" not in line, \
-            f"Log path should not reference old name (update_whitelist.log): {line}"
+    assert len(stdout_lines) == 0, \
+        "StandardOutput must not be set — Python's FileHandler manages the log file directly"
+    assert len(stderr_lines) == 0, \
+        "StandardError must not be set — Python's FileHandler manages the log file directly"
