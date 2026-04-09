@@ -6,6 +6,7 @@ Date: 2024/6/13 16:40:14
 """
 
 import argparse
+import os
 from functools import partial
 
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -67,6 +68,7 @@ def main():
     """
     parser = argparse.ArgumentParser(description='Stay in Whitelist - 自动更新云服务安全组白名单')
     parser.add_argument('--debug', action='store_true', help='调试模式：跳过定时器，直接执行一次检查后退出')
+    parser.add_argument('--force', action='store_true', help='强制更新：清空 IP 缓存，强制触发白名单更新')
     args, _ = parser.parse_known_args()
 
     try:
@@ -81,6 +83,13 @@ def main():
     # Reconfigure logger if custom log path specified
     if config.paths.log_file:
         reconfigure_logging(config.paths.log_file)
+
+    # Force mode: clear IP cache to trigger update
+    if args.force:
+        cache_path = config.paths.ip_cache or 'ip_cache.txt'
+        if os.path.exists(cache_path):
+            os.remove(cache_path)
+            logger.info("已清空 IP 缓存")
 
     # Debug mode: run once and exit
     if args.debug:
