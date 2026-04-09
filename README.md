@@ -1,10 +1,10 @@
 # Stay in Whitelist
 
-[![License](https://img.shields.io/github/license/abrahamgreyson/update-whitelist.svg?)](https://opensource.org/license/mit)
-[![CodeFactor](https://www.codefactor.io/repository/github/abrahamgreyson/update-whitelist/badge)](https://www.codefactor.io/repository/github/abrahamgreyson/update-whitelist)
-[![Test](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml/badge.svg)](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml)
-[![Codecov](https://codecov.io/gh/abrahamgreyson/update-whitelist/branch/main/graph/badge.svg?token=Fc4MbBmMpZ)](https://codecov.io/gh/abrahamgreyson/update-whitelist?branch=main)
-[![Python versions](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12%7C3.13%7C3.14-blue)](https://github.com/abrahamgreyson/update-whitelist/actions/workflows/test.yml)
+[![License](https://img.shields.io/github/license/abrahamgreyson/stay-in-whitelist.svg?)](https://opensource.org/license/mit)
+[![CodeFactor](https://www.codefactor.io/repository/github/abrahamgreyson/stay-in-whitelist/badge)](https://www.codefactor.io/repository/github/abrahamgreyson/stay-in-whitelist)
+[![Test](https://github.com/abrahamgreyson/stay-in-whitelist/actions/workflows/test.yml/badge.svg)](https://github.com/abrahamgreyson/stay-in-whitelist/actions/workflows/test.yml)
+[![Codecov](https://codecov.io/gh/abrahamgreyson/stay-in-whitelist/branch/main/graph/badge.svg?token=Fc4MbBmMpZ)](https://codecov.io/gh/abrahamgreyson/stay-in-whitelist?branch=main)
+[![Python versions](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12%7C3.13%7C3.14-blue)](https://github.com/abrahamgreyson/stay-in-whitelist/actions/workflows/test.yml)
 
 定时检测本地公网 IP 变化，自动更新云服务安全组白名单。
 
@@ -25,7 +25,7 @@
 ### 1. 安装
 
 ```bash
-git clone https://github.com/abrahamgreyson/update-whitelist.git
+git clone https://github.com/abrahamgreyson/stay-in-whitelist.git
 cd stay-in-whitelist
 pip install -e .
 ```
@@ -46,12 +46,17 @@ cp config.example.yaml config.yaml
 # 安装后直接运行（推荐）
 stay-in-whitelist
 
-# 或通过 Python 运行
+# 或通过模块方式运行
+python -m stay_in_whitelist
+
+# 或传统方式
 python main.py
 
 # 调试模式：跳过定时器，执行一次检查后退出
 stay-in-whitelist --debug
-python main.py --debug
+
+# 强制更新：清空 IP 缓存，强制触发白名单更新
+stay-in-whitelist --force
 
 # 后台运行
 nohup stay-in-whitelist > /dev/null 2>&1 &
@@ -189,17 +194,17 @@ sudo nano /etc/systemd/system/stay-in-whitelist.service
 ```ini
 [Service]
 # 修改为项目实际路径
-WorkingDirectory=/home/yourusername/stay-in-whitelist
-ExecStart=/home/yourusername/stay-in-whitelist/venv/bin/stay-in-whitelist
+WorkingDirectory=/opt/stay-in-whitelist
+ExecStart=/opt/stay-in-whitelist/.venv/bin/stay-in-whitelist
 
 # 修改日志路径（可选，默认使用项目内的 stay_in_whitelist.log）
-StandardOutput=append:/home/yourusername/stay-in-whitelist/stay_in_whitelist.log
-StandardError=append:/home/yourusername/stay-in-whitelist/stay_in_whitelist.log
+StandardOutput=append:/opt/stay-in-whitelist/stay_in_whitelist.log
+StandardError=append:/opt/stay-in-whitelist/stay_in_whitelist.log
 ```
 
 **路径说明：**
-- `WorkingDirectory`: 项目根目录，包含 main.py 和 config.yaml
-- `ExecStart`: Python 解释器路径（venv/bin/python）和 main.py 完整路径
+- `WorkingDirectory`: 项目根目录，包含 config.yaml
+- `ExecStart`: 虚拟环境中的 stay-in-whitelist 入口（`.venv/bin/stay-in-whitelist`）
 - `StandardOutput`/`StandardError`: 日志文件路径，需确保有写入权限
 
 #### 3. 启动服务

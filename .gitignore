@@ -6,9 +6,15 @@ config.yaml
 __pycache__/
 ip_cache.txt
 stay_in_whitelist.log*
+update_whitelist.log*
+tests/update_whitelist.log
+update_whitelist.lo
 .coverage
 *.egg-info
 coverage.xml
 report.xml
 # Generated version file
 stay_in_whitelist/_version.py
+# Planning artifacts (local only)
+.planning/
+CLAUDE.md
