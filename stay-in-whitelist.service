@@ -10,7 +10,7 @@
 
 [Unit]
 Description=Stay in Whitelist - Auto-update cloud security group whitelists
-Documentation=https://github.com/your-org/stay-in-whitelist
+Documentation=https://github.com/abrahamgreyson/stay-in-whitelist
 After=network-online.target
 Wants=network-online.target
 
@@ -25,19 +25,22 @@ Type=simple
 WorkingDirectory=/opt/stay-in-whitelist
 
 # Environment PATH to use virtual environment
-Environment="PATH=/opt/stay-in-whitelist/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PATH=/opt/stay-in-whitelist/.venv/bin:/usr/local/bin:/usr/bin:/bin"
 
-# Command to start the daemon - UPDATE THIS PATH
-ExecStart=/opt/stay-in-whitelist/venv/bin/python /opt/stay-in-whitelist/main.py
+# Command to start the daemon
+ExecStart=/opt/stay-in-whitelist/.venv/bin/stay-in-whitelist
 
-# Logging - append to log file (Python's TimedRotatingFileHandler manages rotation)
-# UPDATE THIS PATH to match your deployment
-StandardOutput=append:/opt/stay-in-whitelist/stay_in_whitelist.log
-StandardError=append:/opt/stay-in-whitelist/stay_in_whitelist.log
+# Logging is handled by Python's TimedRotatingFileHandler (stay_in_whitelist.log).
+# Do NOT set StandardOutput/StandardError to the same log file — that would cause
+# duplicate log entries (FileHandler writes directly; StreamHandler writes to stdout
+# which systemd would then append again to the same file).
+# Use journalctl to follow live output: journalctl -u stay-in-whitelist -f
 
 # Restart behavior
 Restart=on-failure
-RestartSec=5s
+RestartSec=10s
+StartLimitIntervalSec=60
+StartLimitBurst=3
 
 # Security hardening (optional, uncomment if desired)
 # ProtectSystem=strict

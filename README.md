@@ -196,11 +196,9 @@ sudo nano /etc/systemd/system/stay-in-whitelist.service
 # 修改为项目实际路径
 WorkingDirectory=/opt/stay-in-whitelist
 ExecStart=/opt/stay-in-whitelist/.venv/bin/stay-in-whitelist
-
-# 修改日志路径（可选，默认使用项目内的 stay_in_whitelist.log）
-StandardOutput=append:/opt/stay-in-whitelist/stay_in_whitelist.log
-StandardError=append:/opt/stay-in-whitelist/stay_in_whitelist.log
 ```
+
+**注意：** 不要设置 `StandardOutput`/`StandardError` 重定向到日志文件。脚本已通过 Python 的 `TimedRotatingFileHandler` 直接写文件，若同时让 systemd 捕获 stdout 追加到同一文件，每条日志会重复出现两次。实时查看日志请用 `journalctl -u stay-in-whitelist -f`。
 
 **路径说明：**
 - `WorkingDirectory`: 项目根目录，包含 config.yaml
