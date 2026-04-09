@@ -1,42 +1,21 @@
 image: 'python:3.12-slim'
 
 stages:
-  - prepare
   - test
 
 variables:
-  VENV_PATH: "$CI_PROJECT_DIR/venv"
-  GIT_DEPTH: 0
+  SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.0"
 
 cache:
   paths:
     - .pip-cache/
-    - $VENV_PATH
-
-install-deps:
-  stage: prepare
-  script:
-    - which git || echo "Git not exists"
-    - python -m venv $VENV_PATH
-    - source $VENV_PATH/bin/activate
-    - pip install --upgrade pip
-    - pip install build  # 添加构建工具
-    - python -m build  # 显式构建步骤
-    - pip install -e ".[dev]"
-  artifacts:
-    paths:
-      - $VENV_PATH
-      - stay_in_whitelist/_version.py
-    expire_in: 1 hour
 
 test:
   stage: test
   script:
-    - source $VENV_PATH/bin/activate
+    - pip install --upgrade pip
+    - pip install -e ".[dev]"
     - cp config.example.yaml config.yaml
-    - pip list
-    - which pytest
-    - pytest --version
     - pytest tests/ --cov=stay_in_whitelist --junitxml=report.xml --cov-report=xml --cov-report=term
   artifacts:
     reports:
