@@ -3,7 +3,7 @@
 Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/13 11:01:15
 """
-from typing import List
+from typing import List, Optional  # noqa: F401
 
 from .base_cloud_provider import BaseCloudProvider
 from huaweicloudsdkcore.auth.credentials import BasicCredentials
@@ -74,7 +74,7 @@ class HuaweiCloud(BaseCloudProvider):
             .build()
         pass
 
-    def get_rules(self, group_id) -> List:
+    def get_rules(self, group_id) -> Optional[List]:
         """
         获取安全组规则
         """

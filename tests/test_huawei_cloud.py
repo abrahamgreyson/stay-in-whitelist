@@ -3,9 +3,10 @@ Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/25 16:31:45
 """
 import pytest
-from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from unittest.mock import MagicMock  # noqa: F401
+from huaweicloudsdkcore.auth.credentials import BasicCredentials  # noqa: F401
 from huaweicloudsdkcore.exceptions import exceptions
-from huaweicloudsdkvpc.v3 import VpcClient
+from huaweicloudsdkvpc.v3 import VpcClient  # noqa: F401
 from stay_in_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
 from stay_in_whitelist.config.config import Allow
 
@@ -21,12 +22,12 @@ def test_initialize_client(mocker):
     mock_vpc_client_builder.with_credentials.return_value = mock_vpc_client_builder
     mock_vpc_client_builder.with_region.return_value = mock_vpc_client_builder
     # 使用模拟的 VpcClientBuilder 对象替代真实的 VpcClient.new_builder 静态方法
-    mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client_builder)
+    mock_new_builder = mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client_builder)
     # 模拟 VpcRegion.value_of 方法返回一个有效的区域
     mocker.patch('huaweicloudsdkvpc.v3.region.vpc_region.VpcRegion.value_of', return_value='cn-north-1')
     huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
     huawei_cloud.initialize_client()
-    assert VpcClient.new_builder.called
+    mock_new_builder.assert_called()
     assert mock_vpc_client_builder.with_credentials.call_count == 2
     assert mock_vpc_client_builder.with_region.called
     assert mock_vpc_client_builder.build.called

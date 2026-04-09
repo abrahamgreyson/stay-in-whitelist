@@ -3,8 +3,8 @@ Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/25 17:19:21
 """
 
+import stay_in_whitelist.cloud_providers.base_cloud_provider as base_module
 from stay_in_whitelist.cloud_providers.base_cloud_provider import BaseCloudProvider
-from stay_in_whitelist.logger import get_logger
 
 
 class MockCloudProvider(BaseCloudProvider):
@@ -22,8 +22,6 @@ class MockCloudProvider(BaseCloudProvider):
 
 
 def test_base_cloud_provider(mocker):
-    # 显式地初始化 BaseCloudProvider 的 logger
-    BaseCloudProvider.logger = get_logger()
     mock_cloud_provider = MockCloudProvider('access_key', 'secret_key', 'region')
     assert mock_cloud_provider.access_key == 'access_key'
     assert mock_cloud_provider.secret_key == 'secret_key'
@@ -31,9 +29,9 @@ def test_base_cloud_provider(mocker):
 
     # 测试 log 方法
     exception = Exception("Test exception")
-    mocker.patch.object(BaseCloudProvider.logger, 'error')
+    mock_error = mocker.patch.object(base_module.logger, 'error')
     mock_cloud_provider.log(exception)
-    BaseCloudProvider.logger.error.assert_called_once()
+    mock_error.assert_called_once()
 
     # 由于这些方法在 MockCloudProvider 中没有实现，所以我们只能测试它们是否存在
     assert hasattr(mock_cloud_provider, 'initialize_client')

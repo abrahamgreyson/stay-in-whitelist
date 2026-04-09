@@ -74,6 +74,7 @@ class Updater:
 
         # ADD new rules FIRST (D-13)
         logger.info(f"添加安全组 {sg} 的规则...")
+        assert self.client is not None
         self._call_with_retry(self.client.add_rules, sg, rules, ip)
 
         # DELETE old rules SECOND (only after new rules are in place)
@@ -106,6 +107,7 @@ class Updater:
         返回 [] 表示安全组存在但无匹配规则。
         其他异常向上传播。
         """
+        assert self.client is not None
         rules = self.client.get_rules(sg)
         if rules is None:
             logger.info(f"安全组 {sg} 不存在，跳过")

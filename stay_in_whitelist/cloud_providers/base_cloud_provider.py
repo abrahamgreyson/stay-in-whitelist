@@ -4,7 +4,7 @@ Date: 2024/6/13 11:00:36
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, List, Optional
 
 from huaweicloudsdkcore.exceptions.exceptions import ClientRequestException
 from tencentcloud.common.exception import TencentCloudSDKException
@@ -27,7 +27,7 @@ class BaseCloudProvider(ABC):
     client: Any
     """ 云服务客户端 """
 
-    def __init__(self, access_key: str, secret_key: str, region: str, **kwargs: Dict[str, Any]) -> None:
+    def __init__(self, access_key: str, secret_key: str, region: str, **kwargs: Any) -> None:
         """
         保存 credentials 和 region 信息
         安全组 sg 我们在调用方法时再指定，这样可以避免多个规则反复初始化客户端
@@ -98,8 +98,8 @@ class BaseCloudProvider(ABC):
         pass
 
     @abstractmethod
-    def get_rules(self, group_id):
+    def get_rules(self, group_id) -> Optional[List]:
         """
-        获取安全组规则
+        获取安全组规则。返回 None 表示安全组不存在，返回 [] 表示无匹配规则。
         """
         pass

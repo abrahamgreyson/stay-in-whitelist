@@ -6,7 +6,7 @@ import json
 
 import pytest
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
-from tencentcloud.vpc.v20170312 import vpc_client
+from tencentcloud.vpc.v20170312 import vpc_client  # noqa: F401
 from stay_in_whitelist.cloud_providers.tencent_cloud import TencentCloud
 from stay_in_whitelist.config.config import Allow
 
