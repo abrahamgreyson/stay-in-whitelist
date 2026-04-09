@@ -4,7 +4,7 @@ Date: 2024/6/25 11:34:49
 """
 
 import pytest
-from stay_in_whitelist.cli import has_ip_changed, check_and_update_ip, main
+from stay_in_whitelist.cli import has_ip_changed, check_and_update_ip, main, look_at_rules
 
 
 def test_has_ip_changed(mocker, mock_config):
@@ -85,3 +85,55 @@ def test_scheduler_configuration(mocker, mock_config):
     configure_idx = next(i for i, c in enumerate(call_order) if 'configure' in c)
     add_job_idx = next(i for i, c in enumerate(call_order) if 'add_job' in c)
     assert configure_idx < add_job_idx, "configure() must be called before add_job()"
+
+
+def test_main_look_mode_calls_look_at_rules(mocker, mock_config):
+    """--look 模式：加载 config、调用 look_at_rules、不启动 scheduler"""
+    mocker.patch('stay_in_whitelist.cli.load_config', return_value=mock_config)
+    mocker.patch('stay_in_whitelist.cli.reconfigure_logging')
+    mock_look = mocker.patch('stay_in_whitelist.cli.look_at_rules')
+    mock_scheduler_cls = mocker.patch('stay_in_whitelist.cli.BlockingScheduler')
+
+    import sys
+    mocker.patch.object(sys, 'argv', ['main.py', '--look'])
+    main()
+
+    mock_look.assert_called_once()
+    mock_scheduler_cls.assert_not_called()
+
+
+def test_look_at_rules_tencent(mocker, mock_config):
+    """look_at_rules 对 Tencent 规则（dict 格式）正常输出表格"""
+    mock_updater = mocker.MagicMock()
+    mock_updater.fetch_security_group_rules.return_value = [
+        {
+            'Port': '3306',
+            'CidrBlock': '1.2.3.4/32',
+            'PolicyIndex': 5,
+            'PolicyDescription': 'from Wulihe - mysql',
+        }
+    ]
+
+    captured = []
+    mocker.patch('builtins.print', side_effect=lambda *a, **kw: captured.append(' '.join(str(x) for x in a)))
+
+    look_at_rules(mock_config, mock_updater)
+
+    output = '\n'.join(captured)
+    assert '3306' in output
+    assert '1.2.3.4/32' in output
+    assert 'from Wulihe' in output
+
+
+def test_look_at_rules_empty_sg(mocker, mock_config):
+    """look_at_rules 对空安全组打印提示而不崩溃"""
+    mock_updater = mocker.MagicMock()
+    mock_updater.fetch_security_group_rules.return_value = []
+
+    captured = []
+    mocker.patch('builtins.print', side_effect=lambda *a, **kw: captured.append(' '.join(str(x) for x in a)))
+
+    look_at_rules(mock_config, mock_updater)
+
+    output = '\n'.join(captured)
+    assert '无符合条件' in output
