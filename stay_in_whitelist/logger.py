@@ -13,7 +13,7 @@ def get_logger(name=__name__):
     """
     获取日志对象
     """
-    logger = logging.getLogger(name)
+    logger = logging.getLogger('stay_in_whitelist')
     logger.setLevel(logging.DEBUG)
 
     # 如果日志器没有处理器，就添加一个新的处理器
@@ -40,6 +40,9 @@ def get_logger(name=__name__):
         logger.addHandler(ch)
         logger.addHandler(fh)
 
+    # 禁止传播到 root logger，避免重复输出
+    logger.propagate = False
+
     return logger
 
 
@@ -48,19 +51,18 @@ def reconfigure_logging(log_file_path: str) -> None:
     Replace TimedRotatingFileHandler with new path. Safe to call multiple times.
     Called after load_config() if config.paths.log_file is specified.
     """
-    for name in logging.root.manager.loggerDict:
-        log = logging.getLogger(name)
-        old_handlers = [h for h in log.handlers if isinstance(h, TimedRotatingFileHandler)]
-        for h in old_handlers:
-            h.close()
-            log.removeHandler(h)
-        if old_handlers:
-            fh = TimedRotatingFileHandler(
-                filename=log_file_path,
-                when='midnight',
-                interval=1,
-                backupCount=30
-            )
-            fh.setLevel(logging.DEBUG)
-            fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-            log.addHandler(fh)
+    log = logging.getLogger('stay_in_whitelist')
+    old_handlers = [h for h in log.handlers if isinstance(h, TimedRotatingFileHandler)]
+    for h in old_handlers:
+        h.close()
+        log.removeHandler(h)
+    if old_handlers:
+        fh = TimedRotatingFileHandler(
+            filename=log_file_path,
+            when='midnight',
+            interval=1,
+            backupCount=30
+        )
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        log.addHandler(fh)
