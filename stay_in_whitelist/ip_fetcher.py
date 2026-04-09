@@ -53,7 +53,7 @@ def get_current_ip(config):
                 url = f"{url}?token={config.ipinfo.tokens[0]}"
 
             logger.info(f"Trying {provider['name']} for IP detection...")
-            response = requests.get(url, timeout=timeout)
+            response = requests.get(url, timeout=timeout, proxies={"http": None, "https": None})
 
             if response.status_code == 200:
                 ip_str = response.text.strip()
