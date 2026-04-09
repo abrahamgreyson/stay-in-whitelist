@@ -153,13 +153,53 @@ def test_set_client(mocker):
 
 
 def test_fetch_security_group_rules_returns_empty_list_on_error(mocker):
-    """fetch_security_group_rules must return [] on exception, not None."""
+    """fetch_security_group_rules must propagate exception (not swallow it)."""
     updater = Updater()
     updater.client = Mock()
     updater.client.get_rules.side_effect = Exception('error')
     with patch('stay_in_whitelist.updater.logger'):
-        result = updater.fetch_security_group_rules('sg1')
-    assert result == []
+        with pytest.raises(Exception, match='error'):
+            updater.fetch_security_group_rules('sg1')
+
+
+# --- New contract tests (Task 2) ---
+
+def test_fetch_security_group_rules_returns_none_when_sg_not_found(mocker):
+    """fetch_security_group_rules returns None when get_rules returns None (sg not found)."""
+    updater = Updater()
+    updater.client = Mock()
+    updater.client.get_rules.return_value = None
+    result = updater.fetch_security_group_rules('sg1')
+    assert result is None
+
+
+def test_update_security_group_rules_skips_when_sg_not_found(mocker):
+    """update_security_group_rules skips add_rules and delete_rules when sg not found (None)."""
+    updater = Updater()
+    updater.client = Mock()
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=None)
+    updater.update_security_group_rules('sg1', ['allow1'], '127.0.0.1')
+    updater.client.add_rules.assert_not_called()
+    updater.client.delete_rules.assert_not_called()
+
+
+def test_update_cloud_providers_propagates_exception(mocker):
+    """update_cloud_providers propagates exceptions from update_security_group_rules (does not swallow)."""
+    mocker.patch.object(Updater, 'set_client')
+    mocker.patch.object(Updater, 'update_security_group_rules', side_effect=Exception('provider error'))
+    updater = Updater()
+    config = Config(
+        tencent=CloudProvider(
+            access_key='key1',
+            secret_key='secret1',
+            regions=[Region(
+                region='region1',
+                rules=[Rule(sg='sg1', allow=[Allow(port=80, desc='http')])]
+            )]
+        )
+    )
+    with pytest.raises(Exception, match='provider error'):
+        updater.update_cloud_providers('127.0.0.1', config)
 
 
 def test_fetch_security_group_rules_success(mocker):

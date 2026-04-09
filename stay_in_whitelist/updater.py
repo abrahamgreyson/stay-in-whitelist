@@ -68,6 +68,10 @@ class Updater:
         logger.info(f"获取安全组 {sg} 的规则...")
         existed_rules = self.fetch_security_group_rules(sg)
 
+        if existed_rules is None:
+            logger.info(f"安全组 {sg} 不存在，跳过规则更新")
+            return
+
         # ADD new rules FIRST (D-13)
         logger.info(f"添加安全组 {sg} 的规则...")
         self._call_with_retry(self.client.add_rules, sg, rules, ip)
@@ -97,17 +101,17 @@ class Updater:
 
     def fetch_security_group_rules(self, sg):
         """
-        获取安全组规则
+        获取安全组规则。
+        返回 None 表示安全组不存在（跳过该 sg）。
+        返回 [] 表示安全组存在但无匹配规则。
+        其他异常向上传播。
         """
-        try:
-            # 调用相应云服务的方法获取安全组规则
-            rules = self.client.get_rules(sg)
-            logger.info(f"成功获取安全组 {sg} 的规则")
-            return rules
-
-        except Exception as e:
-            logger.error(f"获取 {sg} 安全组规则时出错: {str(e)}")
-            return []
+        rules = self.client.get_rules(sg)
+        if rules is None:
+            logger.info(f"安全组 {sg} 不存在，跳过")
+            return None
+        logger.info(f"成功获取安全组 {sg} 的规则")
+        return rules
 
     def _call_with_retry(self, fn, *args, **kwargs):
         """Execute a cloud API call with retry on transient network errors per D-09."""
