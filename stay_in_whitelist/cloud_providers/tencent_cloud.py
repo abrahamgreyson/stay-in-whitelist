@@ -34,15 +34,11 @@ class TencentCloud(BaseCloudProvider):
             filtered_rules = [rule for rule in rules if rule['PolicyDescription'].startswith(self.rule_prefix)]
             return filtered_rules
         except TencentCloudSDKException as err:
-            if err.get_code() == 'InvalidSecurityGroupID.NotFound':
-                logger.warning(f"安全组 {group_id} 不存在，跳过")
-                return None
-            else:
-                BaseCloudProvider.log(err)
-                raise
+            BaseCloudProvider.log(err)
+            return []
 
-    def add_rules(self, group_id, rules, ip):
-        """ 添加安全组规则 """
+    def add_rules(self, group_id, rules, ip) -> bool:
+        """ 添加安全组规则。成功返回 True；sg 不存在返回 False；其他异常向上传播。 """
         try:
             req = models.CreateSecurityGroupPoliciesRequest()
             params = {
@@ -62,14 +58,13 @@ class TencentCloud(BaseCloudProvider):
             req.from_json_string(json.dumps(params))
             resp = self.client.CreateSecurityGroupPolicies(req)
             logger.debug(resp.to_json_string())
-            # 输出json格式的字符串回包
+            return True
         except TencentCloudSDKException as err:
             if err.get_code() == 'InvalidSecurityGroupID.NotFound':
-                logger.warning(f"安全组 {group_id} 不存在，跳过添加规则")
-                return
-            else:
                 BaseCloudProvider.log(err)
-                raise
+                return False
+            BaseCloudProvider.log(err)
+            raise
 
     def delete_rules(self, group_id, rules):
         """ 删除安全组规则 """

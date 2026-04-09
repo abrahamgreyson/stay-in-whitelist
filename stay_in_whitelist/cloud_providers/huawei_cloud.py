@@ -3,7 +3,7 @@
 Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/13 11:01:15
 """
-from typing import List, Optional  # noqa: F401
+from typing import List
 
 from .base_cloud_provider import BaseCloudProvider
 from huaweicloudsdkcore.auth.credentials import BasicCredentials
@@ -34,8 +34,8 @@ class HuaweiCloud(BaseCloudProvider):
             BaseCloudProvider.log(e)
         return None
 
-    def add_rules(self, group_id, rules, ip):
-        """ 批量添加规则 """
+    def add_rules(self, group_id, rules, ip) -> bool:
+        """ 批量添加规则。成功返回 True；404/409 返回 False；其他异常向上传播。 """
         try:
             request = BatchCreateSecurityGroupRulesRequest()
             request.security_group_id = group_id
@@ -53,16 +53,13 @@ class HuaweiCloud(BaseCloudProvider):
             )
             response = self.client.batch_create_security_group_rules(request)
             logger.info(f"Added {len(rules)} rules to {group_id}")
+            return True
         except exceptions.ClientRequestException as e:
-            if e.status_code == 404:
-                logger.warning(f"安全组 {group_id} 不存在，跳过添加规则")
-                return
-            elif e.status_code == 409:
-                BaseCloudProvider.log(e)  # logs as warning, rule already exists
-                return
-            else:
+            if e.status_code in (404, 409):
                 BaseCloudProvider.log(e)
-                raise
+                return False
+            BaseCloudProvider.log(e)
+            raise
 
     def initialize_client(self):
         """ 初始化客户端 """
@@ -74,7 +71,7 @@ class HuaweiCloud(BaseCloudProvider):
             .build()
         pass
 
-    def get_rules(self, group_id) -> Optional[List]:
+    def get_rules(self, group_id) -> List:
         """
         获取安全组规则
         """
@@ -94,10 +91,6 @@ class HuaweiCloud(BaseCloudProvider):
             ]
 
         except exceptions.ClientRequestException as e:
-            if e.status_code == 404:
-                logger.warning(f"安全组 {group_id} 不存在，跳过")
-                return None
-            else:
-                BaseCloudProvider.log(e)
-                raise
+            BaseCloudProvider.log(e)
+            return []
 

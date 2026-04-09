@@ -91,9 +91,11 @@ class BaseCloudProvider(ABC):
         pass
 
     @abstractmethod
-    def add_rules(self, group_id, rules, ip):
+    def add_rules(self, group_id, rules, ip) -> bool:
         """
-        添加安全组规则
+        添加安全组规则。
+        返回 True 表示规则写入成功；返回 False 表示无需写入（如 409 规则已存在、404 安全组不存在）。
+        其他异常向上传播。
         """
         pass
 
