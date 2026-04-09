@@ -13,8 +13,8 @@ cache:
 test:
   stage: test
   script:
-    - pip install --upgrade pip
-    - pip install -e ".[dev]"
+    - pip install --cache-dir .pip-cache/ -i https://pypi.tuna.tsinghua.edu.cn/simple/ --upgrade pip
+    - pip install --cache-dir .pip-cache/ -i https://pypi.tuna.tsinghua.edu.cn/simple/ -e ".[dev]"
     - cp config.example.yaml config.yaml
     - pytest tests/ --cov=stay_in_whitelist --junitxml=report.xml --cov-report=xml --cov-report=term
   artifacts:
