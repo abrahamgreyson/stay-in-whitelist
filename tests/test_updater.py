@@ -5,7 +5,7 @@ Date: 2024/6/25 12:14:39
 
 import pytest
 import requests
-from unittest.mock import Mock, patch, call, MagicMock
+from unittest.mock import Mock, patch, MagicMock  # noqa: F401
 from stay_in_whitelist.updater import Updater
 from stay_in_whitelist.cloud_providers.tencent_cloud import TencentCloud
 from stay_in_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
@@ -16,7 +16,7 @@ def test_client_is_instance_variable():
     """Two Updater instances must NOT share client state."""
     u1 = Updater()
     u2 = Updater()
-    u1.client = "something"
+    u1.client = Mock()  # type: ignore[assignment]
     assert u2.client is None
 
 
