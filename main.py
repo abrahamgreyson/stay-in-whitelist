@@ -38,7 +38,6 @@ def has_ip_changed(config):
     cached_ip = load_cached_ip(config)
 
     if current_ip != cached_ip:
-        cache_ip(current_ip, config)
         return True, current_ip
     return False, current_ip
 
@@ -53,6 +52,8 @@ def check_and_update_ip(config):
             logger.info(f"IP 地址已经更改：{current_ip}. 更新云服务白名单.")
             updater = Updater()
             updater.update_cloud_providers(current_ip, config)
+            # Cache new IP only AFTER successful update
+            cache_ip(current_ip, config)
             logger.info("云服务白名单更新成功.")
         else:
             logger.info("IP 地址没有更改，无需更新云服务白名单")
