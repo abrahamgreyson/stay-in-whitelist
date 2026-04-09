@@ -18,3 +18,4 @@ stay_in_whitelist/_version.py
 # Planning artifacts (local only)
 .planning/
 CLAUDE.md
+.claude/
