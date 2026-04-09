@@ -41,10 +41,10 @@ class HuaweiCloud(BaseCloudProvider):
             request.security_group_id = group_id
             rules_body = [
                 BatchCreateSecurityGroupRulesOption(
-                    description=f"{self.rule_prefix}{' - ' + rule['desc'] if rule.get('desc') else ''}",
+                    description=f"{self.rule_prefix}{' - ' + rule.desc if rule.desc else ''}",
                     direction="ingress",
                     protocol="tcp",
-                    multiport=str(rule['port']),
+                    multiport=str(rule.port),
                     remote_ip_prefix=str(ip)
                 ) for rule in rules
             ]

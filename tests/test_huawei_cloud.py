@@ -6,6 +6,7 @@ from huaweicloudsdkcore.auth.credentials import BasicCredentials
 from huaweicloudsdkcore.exceptions import exceptions
 from huaweicloudsdkvpc.v3 import VpcClient
 from stay_in_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
+from stay_in_whitelist.config.config import Allow
 
 
 def test_initialize_client(mocker):
@@ -62,7 +63,7 @@ def test_add_rules(mocker):
     mocker.patch('huaweicloudsdkvpc.v3.VpcClient.new_builder', return_value=mock_vpc_client)
     huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
     huawei_cloud.client = mock_vpc_client
-    huawei_cloud.add_rules('group_id', [{'port': 80, 'desc': 'test'}], '127.0.0.1')
+    huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
     mock_vpc_client.batch_create_security_group_rules.assert_called_once()
 
 
@@ -93,5 +94,5 @@ def test_add_rules_catches_exception(mocker):
     huawei_cloud = HuaweiCloud('access_key', 'secret_key', 'cn-north-1')
     huawei_cloud.client = mock_vpc_client
     # Should NOT raise -- exception is caught internally
-    huawei_cloud.add_rules('group_id', [{'port': 80, 'desc': 'test'}], '127.0.0.1')
+    huawei_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
     mock_log.assert_called_once()

@@ -8,6 +8,7 @@ import pytest
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.vpc.v20170312 import vpc_client
 from stay_in_whitelist.cloud_providers.tencent_cloud import TencentCloud
+from stay_in_whitelist.config.config import Allow
 
 
 def test_initialize_client(mocker):
@@ -47,7 +48,7 @@ def test_add_rules(mocker):
     mocker.patch('tencentcloud.vpc.v20170312.vpc_client.VpcClient', return_value=mock_vpc_client)
     tencent_cloud = TencentCloud('access_key', 'secret_key', 'region')
     tencent_cloud.client = mock_vpc_client
-    tencent_cloud.add_rules('group_id', [{'port': 80, 'desc': 'test'}], '127.0.0.1')
+    tencent_cloud.add_rules('group_id', [Allow(port=80, desc='test')], '127.0.0.1')
     assert mock_vpc_client.CreateSecurityGroupPolicies.called
 
 

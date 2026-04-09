@@ -47,10 +47,10 @@ class TencentCloud(BaseCloudProvider):
                     "Ingress": [
                         {
                             "Protocol": "tcp",
-                            "Port": str(rule['port']),
+                            "Port": str(rule.port),
                             "CidrBlock": ip,
                             "Action": "accept",
-                            "PolicyDescription": f"{self.rule_prefix}{' - ' + rule['desc'] if rule.get('desc') else ''}"
+                            "PolicyDescription": f"{self.rule_prefix}{' - ' + rule.desc if rule.desc else ''}"
                         } for rule in rules
                     ]
                 }
