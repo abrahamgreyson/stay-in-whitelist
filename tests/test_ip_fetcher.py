@@ -118,3 +118,19 @@ def test_cache_ip(mocker, mock_config):
     mocker.patch('builtins.open', mock_file)
     cache_ip('127.0.0.1', mock_config)
     mock_file().write.assert_called_once_with('127.0.0.1')
+
+
+def test_get_current_ip_fallback_on_oserror(mocker, mock_config):
+    """Test: get_current_ip catches OSError per-provider and falls back to next provider."""
+    mock_response = _mock_response(200, "5.6.7.8\n")
+    # First call: OSError (certifi CA bundle missing), second call: success
+    mocker.patch('requests.get', side_effect=[OSError("Could not find a suitable TLS CA certificate bundle"), mock_response])
+    result = get_current_ip(mock_config)
+    assert result == "5.6.7.8"
+
+
+def test_get_current_ip_all_providers_oserror(mocker, mock_config):
+    """Test: get_current_ip returns None when ALL providers raise OSError."""
+    mocker.patch('requests.get', side_effect=OSError("Could not find a suitable TLS CA certificate bundle"))
+    result = get_current_ip(mock_config)
+    assert result is None
