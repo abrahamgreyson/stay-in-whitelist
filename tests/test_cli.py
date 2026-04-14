@@ -2,9 +2,8 @@
 Tests for cli.py: tri-state has_ip_changed and check_and_update_ip failure handling.
 """
 
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock
 
-import pytest
 import requests
 
 from stay_in_whitelist.cli import has_ip_changed, check_and_update_ip
@@ -82,7 +81,7 @@ def test_check_and_update_ip_logs_failure_when_fetch_fails(mocker, mock_config):
 
 def test_check_and_update_ip_calls_updater_when_ip_changed(mocker, mock_config):
     """check_and_update_ip calls Updater.update_cloud_providers when IP changed."""
-    mock_logger = mocker.patch('stay_in_whitelist.cli.logger')
+    mocker.patch('stay_in_whitelist.cli.logger')
     mocker.patch('stay_in_whitelist.cli.has_ip_changed', return_value=(True, '5.6.7.8'))
     mock_updater_instance = MagicMock()
     mock_updater_cls = mocker.patch('stay_in_whitelist.cli.Updater', return_value=mock_updater_instance)

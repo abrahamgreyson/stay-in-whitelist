@@ -130,7 +130,7 @@ None yet.
 | 260409-ka5 | 修复 add-then-delete：add_rules 返回 bool，409 幂等，delete 只在 add 成功后执行 | 2026-04-09 | d65d60f | [260409-ka5-add-then-delete-add-rules-delete-add](./quick/260409-ka5-add-then-delete-add-rules-delete-add/) |
 | 260409-jrs | 错误分类与传播：sg 不存在静默跳过，其他错误向上抛出，cache_ip 只在全部成功后执行 | 2026-04-09 | 54f0eb2 | [260409-jrs-cache-ip](./quick/260409-jrs-cache-ip/) |
 | 260409-ka5 | add_rules 返回 bool，updater 根据返回值决定是否 delete，修复 409 时误删旧规则的竞态 | 2026-04-09 | 092cbdd | [260409-ka5-add-then-delete-add-rules-delete-add](./quick/260409-ka5-add-then-delete-add-rules-delete-add/) |
-| 260414-n3c | tri-state has_ip_changed 区分获取失败与 IP 未变，OSError per-provider fallback，certifi 显式依赖 | 2026-04-14 | 7e92511 | [260414-n3c-ip-ip](./quick/260414-n3c-ip-ip/) |
+| 260414-n3c | tri-state has_ip_changed 区分获取失败与 IP 未变，OSError per-provider fallback，certifi 显式依赖 | 2026-04-14 | 2aaea6c | [260414-n3c-ip-ip](./quick/260414-n3c-ip-ip/) |
 
 ## Session Continuity
 

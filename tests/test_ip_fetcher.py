@@ -3,9 +3,8 @@ Author: abe<wechat:abrahamgreyson>
 Date: 2024/6/25 16:27:03
 """
 
-import pytest
 import requests
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from stay_in_whitelist.ip_fetcher import get_current_ip, load_cached_ip, cache_ip
 

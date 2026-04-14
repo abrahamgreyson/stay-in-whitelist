@@ -44,6 +44,7 @@ def get_current_ip(config):
     timeout = (timeout_settings.connect, timeout_settings.read)
 
     for provider in IP_PROVIDERS:
+        response = None
         try:
             url = provider["url"]
             if provider["needs_token"]:
@@ -53,7 +54,7 @@ def get_current_ip(config):
                 url = f"{url}?token={config.ipinfo.tokens[0]}"
 
             logger.info(f"Trying {provider['name']} for IP detection...")
-            response = requests.get(url, timeout=timeout, proxies={"http": None, "https": None})
+            response = requests.get(url, timeout=timeout, proxies={"http": "", "https": ""})
 
             if response.status_code == 200:
                 ip_str = response.text.strip()
@@ -65,7 +66,8 @@ def get_current_ip(config):
         except (requests.RequestException, OSError) as e:
             logger.warning(f"Provider {provider['name']} request failed: {type(e).__name__}: {e}")
         except ValueError:
-            logger.warning(f"Provider {provider['name']} returned invalid IP: {response.text.strip()[:50]}")
+            raw = response.text.strip()[:50] if response else 'N/A'
+            logger.warning(f"Provider {provider['name']} returned invalid IP: {raw}")
 
     logger.error("All IP detection providers failed, skipping this check cycle")
     return None
