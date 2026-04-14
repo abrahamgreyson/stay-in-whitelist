@@ -21,18 +21,22 @@ logger = get_logger()
 def has_ip_changed(config):
     """
     检查本级 IP 地址是否变化
+    Returns:
+        (True, ip)  - IP changed or first run (no cache)
+        (False, ip) - IP unchanged
+        (None, None) - fetch failure
     """
     try:
         current_ip = get_current_ip(config)
         if not current_ip:
             logger.error("获取 IP 失败：IP 为空")
-            return False, None
+            return None, None
     except (requests.RequestException, requests.Timeout) as e:
         logger.error(f"网络请求失败: {type(e).__name__} - {e}")
-        return False, None
+        return None, None
     except Exception as e:
         logger.error(f"获取 IP 时发生未知错误: {type(e).__name__} - {e}")
-        return False, None
+        return None, None
 
     cached_ip = load_cached_ip(config)
 
@@ -47,6 +51,9 @@ def check_and_update_ip(config):
     """
     try:
         ip_changed, current_ip = has_ip_changed(config)
+        if ip_changed is None:
+            logger.error("获取 IP 失败，跳过本次检查")
+            return
         if ip_changed:
             logger.info(f"IP 地址已经更改：{current_ip}. 更新云服务白名单.")
             updater = Updater()

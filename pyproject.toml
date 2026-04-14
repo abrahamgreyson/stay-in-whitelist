@@ -16,6 +16,7 @@ classifiers = [
 description = "定时检测公网 IP 变化并自动更新云服务安全组白名单"
 requires-python = ">=3.9"
 dependencies = [
+    "certifi>=2024.2.2",
     "pyyaml~=6.0.1",
     "huaweicloudsdkcore~=3.1.99",
     "huaweicloudsdkvpc~=3.1.99",

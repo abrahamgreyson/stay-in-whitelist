@@ -62,8 +62,8 @@ def get_current_ip(config):
                 return ip_str
             else:
                 logger.warning(f"{provider['name']} returned status {response.status_code}")
-        except requests.RequestException as e:
-            logger.warning(f"Provider {provider['name']} request failed: {type(e).__name__}")
+        except (requests.RequestException, OSError) as e:
+            logger.warning(f"Provider {provider['name']} request failed: {type(e).__name__}: {e}")
         except ValueError:
             logger.warning(f"Provider {provider['name']} returned invalid IP: {response.text.strip()[:50]}")
 
