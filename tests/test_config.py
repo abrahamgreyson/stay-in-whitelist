@@ -165,3 +165,37 @@ class TestRulePrefix:
     def test_rule_prefix_in_mock_config(self, mock_config):
         """mock_config fixture includes rule_prefix with default value."""
         assert mock_config.rule_prefix == "from Wulihe"
+
+
+class TestIps:
+    """ips field validation and defaults."""
+
+    def test_ips_defaults_to_none(self):
+        """Config() defaults ips to None (auto-detect mode)."""
+        cfg = Config()
+        assert cfg.ips is None
+
+    def test_ips_accepts_valid_list(self):
+        """Config(ips=['1.2.3.4', '10.0.0.1']) succeeds."""
+        cfg = Config(ips=["1.2.3.4", "10.0.0.1"])
+        assert cfg.ips == ["1.2.3.4", "10.0.0.1"]
+
+    def test_ips_accepts_empty_list(self):
+        """Config(ips=[]) succeeds — used to clean up all prefix-matching rules."""
+        cfg = Config(ips=[])
+        assert cfg.ips == []
+
+    def test_ips_rejects_invalid_ip(self):
+        """Config(ips=['not-an-ip']) raises ValidationError."""
+        with pytest.raises(ValidationError):
+            Config(ips=["not-an-ip"])
+
+    def test_ips_rejects_invalid_ip_in_list(self):
+        """A single invalid IP in the list causes ValidationError."""
+        with pytest.raises(ValidationError):
+            Config(ips=["1.2.3.4", "invalid", "10.0.0.1"])
+
+    def test_ips_accepts_ipv6(self):
+        """IPv6 addresses are also valid."""
+        cfg = Config(ips=["::1", "2001:db8::1"])
+        assert cfg.ips == ["::1", "2001:db8::1"]

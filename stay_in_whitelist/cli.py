@@ -128,6 +128,16 @@ def look_at_rules(config, updater):
                 print(separator)
 
 
+def apply_static_ips(config):
+    """使用静态 IP 列表更新云服务商白名单"""
+    try:
+        updater = Updater()
+        updater.update_cloud_providers_static_ips(config.ips, config)
+        logger.info(f"静态 IP 白名单更新完成: {config.ips}")
+    except Exception as e:
+        logger.error(f"静态 IP 白名单更新失败: {e}")
+
+
 def main():
     """
     启动定时任务
@@ -151,11 +161,18 @@ def main():
     if config.paths.log_file:
         reconfigure_logging(config.paths.log_file)
 
-    # Look mode: read-only, enumerate all rules and exit.
-    # Must be checked BEFORE --force to ensure full mutual exclusivity.
+    # Look mode: read-only, works in both auto-detect and static IP modes.
     if args.look:
         updater = Updater()
         look_at_rules(config, updater)
+        return
+
+    # Static IP mode: when ips is configured (including empty list), bypass auto-detection.
+    # Use "is not None" so that ips: [] triggers reconcile (clean up) rather than auto-detect.
+    if config.ips is not None:
+        if args.debug:
+            logger.info(f"调试模式（静态 IP）：应用 IP 列表 {config.ips}")
+        apply_static_ips(config)
         return
 
     # Force mode: clear IP cache to trigger update

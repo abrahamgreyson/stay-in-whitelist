@@ -1,63 +1,84 @@
 # Create by Abraham Greyson<wechat:abrahamgreyson>
-# DateTime 2024/6/13 下午4:10
+# DateTime 2024/6/23 下午4:10
 
 # 配置文件模板
 # 请将此文件复制一份并命名为config.yaml
 
 # 华为云
-huawei:
-  access_key: your_huawei_access_key
-  secret_key: your_huawei_secret_key
-  regions:
-    - region: huawei_region_code(e.g cn-east-3)
-      rules:
-        - sg: your_huawei_security_group_id
-          allow:
-            - port: 80
-              desc: http
-            - port: 444
-              desc: docs
-            - port: 5542
-              desc: haha
-            - port: 33558
-    - region: huawei_region_code(e.g cn-east-3)
-      rules:
-        - sg: your_another_huawei_security_group_id
-          allow:
-            - port: 7799
-              desc: test
-            - port: 11111
+# huawei:
+#   access_key: your_huawei_access_key
+#   secret_key: your_huawei_secret_key
+#   regions:
+#     - region: ap-southeast-2
+#       rules:
+#         - sg: your_huawei_security_group_id
+#           allow:
+#             - port: '1-65535'
+#               desc: all
+#         - sg: your_another_huawei_security_group_id
+#           allow:
+#             - port: 80
+#               desc: http
+#             - port: 443
+#               desc: https
+#             - port: 3306
+#               desc: MySQL
+
 # 腾讯云
 tencent:
   access_key: your_tencent_cloud_access_key
   secret_key: your_tencent_cloud_secret_key
   regions:
-    - region: tencent_cloud_region_code(e.g ap-guangzhou)
+    - region: ap-bangkok
       rules:
         - sg: your_tencent_security_group_id
           allow:
-            - port: 80
-              desc: http
-            - port: 444
-              desc: docs
-            - port: 5542
-              desc: haha
-            - port: 33558
+            - port: 22
+              desc: ssh
+            - port: 32560
+              desc: MySQL 5 只读节点
+            - port: 32561
+              desc: MySQL 8 只读节点
+            - port: 32562
+              desc: MySQL 5 主节点
+            - port: 32563
+              desc: MySQL 8 主节点
+            - port: 32564
+              desc: 越南 MySQL
+            - port: 32565
+              desc: 马来 MySQL
+            - port: 32566
+              desc: 斯里兰卡 MySQL
+            - port: 32567
+              desc: 预留
+            - port: 32568
+              desc: 预留
+
+# Optional: security group rule description prefix (default: "from Wulihe")
+# Change this for dev/prod isolation, e.g., "Abe" for testing
+# Note: changing prefix means existing rules with old prefix become orphaned and must be cleaned up manually
+# rule_prefix: "from Wulihe"
+
+# Optional: static IPs to whitelist (bypasses auto-detection and scheduler entirely)
+# When set, the tool does NOT detect your public IP, does NOT use IP caching,
+# and does NOT start the periodic scheduler.
+# Set to empty list ips: [] to clean up all prefix-matching rules.
+# Combine with rule_prefix for namespace isolation, e.g.:
+#   rule_prefix: "Abe"
+#   ips: ["203.0.113.50", "198.51.100.10"]
+# ips:
+#   - 203.0.113.50
+#   - 198.51.100.10
 
 # ipinfo
 # 请在 ipinfo.io 申请token
 ipinfo:
   tokens:
-    - token_a
-    - token_b
+    - your_ipinfo_token_a
+    - your_ipinfo_token_b
 
 # Optional: check interval in seconds (default: 600, minimum: 600)
 # check_interval: 600
-
-# Optional: security group rule description prefix (default: "from Wulihe")
-# Change this for dev/prod isolation, e.g., "from Wulihe-dev" for development
-# Note: changing prefix means existing rules with old prefix become orphaned and must be cleaned up manually
-# rule_prefix: "from Wulihe"
 
 # Optional: file paths (defaults to same directory as config.yaml)
 # paths:

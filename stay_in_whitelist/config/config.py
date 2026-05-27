@@ -13,6 +13,7 @@ Usage:
 Importing this module does NOT trigger file I/O. Call load_config() explicitly.
 """
 
+import ipaddress
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -74,6 +75,15 @@ class Config(BaseModel):
     check_interval: int = 600
     paths: Paths = Paths()
     rule_prefix: str = "from Wulihe"
+    ips: Optional[List[str]] = None
+
+    @field_validator('ips')
+    @classmethod
+    def validate_ips(cls, v):
+        if v is not None:
+            for ip_str in v:
+                ipaddress.ip_address(ip_str)
+        return v
 
     @field_validator('check_interval')
     @classmethod

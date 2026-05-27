@@ -100,6 +100,41 @@ class Updater:
         else:
             raise ValueError(f"不支持的云服务提供商: {provider_name}")
 
+    def reconcile_security_group_rules(self, sg, rules, ips):
+        """
+        静态 IP 模式的规则同步：delete-first-then-add，天然幂等。
+        ips 为空列表时仅执行删除，实现清空效果。
+        """
+        existed_rules = self.fetch_security_group_rules(sg)
+        if existed_rules is None:
+            return
+
+        if existed_rules:
+            logger.info(f"清空安全组 {sg} 的 {len(existed_rules)} 条旧规则...")
+            self._call_with_retry(self.client.delete_rules, sg, existed_rules)
+
+        for ip in ips:
+            logger.info(f"添加安全组 {sg} 的规则，IP: {ip}...")
+            assert self.client is not None
+            self._call_with_retry(self.client.add_rules, sg, rules, ip)
+
+    def update_cloud_providers_static_ips(self, ips, config):
+        """使用静态 IP 列表更新所有云服务商白名单"""
+        for provider_name in CLOUD_PROVIDER_FIELDS:
+            provider_config = getattr(config, provider_name, None)
+            if provider_config is None:
+                continue
+
+            logger.info(f"更新 {provider_name}（静态 IP 模式）...")
+            access_key = provider_config.access_key
+            secret_key = provider_config.secret_key
+
+            for region_config in provider_config.regions:
+                region = region_config.region
+                for rule in region_config.rules:
+                    self.set_client(provider_name, access_key, secret_key, region, config.rule_prefix)
+                    self.reconcile_security_group_rules(rule.sg, rule.allow, ips)
+
     def fetch_security_group_rules(self, sg):
         """
         获取安全组规则。

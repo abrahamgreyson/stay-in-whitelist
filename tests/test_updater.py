@@ -286,3 +286,114 @@ def test_delete_called_when_add_returns_true(mocker):
     mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
     updater.update_security_group_rules('sg1', ['allow1'], '127.0.0.1')
     updater.client.delete_rules.assert_called_once_with('sg1', ['rule1'])
+
+
+# --- reconcile_security_group_rules tests ---
+
+
+def test_reconcile_deletes_before_adds(mocker):
+    """reconcile must delete existing rules BEFORE adding new ones (opposite of auto-detect)."""
+    updater = Updater()
+    updater.client = Mock()
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=['old_rule'])
+    mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater.reconcile_security_group_rules('sg1', ['allow1'], ['1.2.3.4'])
+    calls = [c[0] for c in updater.client.method_calls]
+    assert calls == ['delete_rules', 'add_rules']
+
+
+def test_reconcile_adds_rules_for_each_ip(mocker):
+    """reconcile calls add_rules once per IP in the list."""
+    updater = Updater()
+    updater.client = Mock()
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=[])
+    mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater.reconcile_security_group_rules('sg1', ['allow1'], ['1.2.3.4', '5.6.7.8'])
+    assert updater.client.add_rules.call_count == 2
+    updater.client.add_rules.assert_any_call('sg1', ['allow1'], '1.2.3.4')
+    updater.client.add_rules.assert_any_call('sg1', ['allow1'], '5.6.7.8')
+
+
+def test_reconcile_skips_when_sg_not_found(mocker):
+    """reconcile returns early when fetch returns None (sg not found)."""
+    updater = Updater()
+    updater.client = Mock()
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=None)
+    updater.reconcile_security_group_rules('sg1', ['allow1'], ['1.2.3.4'])
+    updater.client.delete_rules.assert_not_called()
+    updater.client.add_rules.assert_not_called()
+
+
+def test_reconcile_skips_delete_when_no_existing_rules(mocker):
+    """reconcile does not call delete_rules when no existing rules."""
+    updater = Updater()
+    updater.client = Mock()
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=[])
+    mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater.reconcile_security_group_rules('sg1', ['allow1'], ['1.2.3.4'])
+    updater.client.delete_rules.assert_not_called()
+    updater.client.add_rules.assert_called_once_with('sg1', ['allow1'], '1.2.3.4')
+
+
+def test_reconcile_empty_ips_only_deletes(mocker):
+    """reconcile with empty ips list deletes existing rules without adding any."""
+    updater = Updater()
+    updater.client = Mock()
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=['rule1', 'rule2'])
+    mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater.reconcile_security_group_rules('sg1', ['allow1'], [])
+    updater.client.delete_rules.assert_called_once_with('sg1', ['rule1', 'rule2'])
+    updater.client.add_rules.assert_not_called()
+
+
+def test_reconcile_idempotent(mocker):
+    """reconcile produces same result regardless of existing state (idempotent)."""
+    updater = Updater()
+    updater.client = Mock()
+    # First run: existing rules match desired state
+    mocker.patch.object(updater, 'fetch_security_group_rules', return_value=['existing_rule'])
+    mocker.patch.object(updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater.reconcile_security_group_rules('sg1', ['allow1'], ['1.2.3.4'])
+    # delete + add both called regardless of existing state
+    updater.client.delete_rules.assert_called_once()
+    updater.client.add_rules.assert_called_once()
+
+
+# --- update_cloud_providers_static_ips tests ---
+
+
+def test_update_cloud_providers_static_ips_iterates_all(mocker):
+    """update_cloud_providers_static_ips iterates providers/regions/SGs."""
+    mocker.patch.object(Updater, 'set_client')
+    mocker.patch.object(Updater, 'reconcile_security_group_rules')
+    updater = Updater()
+    config = Config(
+        tencent=CloudProvider(
+            access_key='key1',
+            secret_key='secret1',
+            regions=[Region(
+                region='ap-guangzhou',
+                rules=[Rule(sg='sg-t1', allow=[Allow(port=80)]),
+                       Rule(sg='sg-t2', allow=[Allow(port=443)])]
+            )]
+        )
+    )
+    updater.update_cloud_providers_static_ips(['10.0.0.1'], config)
+    assert updater.reconcile_security_group_rules.call_count == 2
+    updater.set_client.assert_called_with('tencent', 'key1', 'secret1', 'ap-guangzhou', 'from Wulihe')
+
+
+def test_update_cloud_providers_static_ips_skips_none_providers(mocker):
+    """update_cloud_providers_static_ips skips None providers."""
+    mocker.patch.object(Updater, 'set_client')
+    mocker.patch.object(Updater, 'reconcile_security_group_rules')
+    updater = Updater()
+    config = Config(
+        huawei=CloudProvider(
+            access_key='hk1',
+            secret_key='hs1',
+            regions=[Region(region='cn-east-3', rules=[Rule(sg='sg-h', allow=[Allow(port=22)])])]
+        )
+    )
+    updater.update_cloud_providers_static_ips(['1.2.3.4'], config)
+    assert updater.reconcile_security_group_rules.call_count == 1
