@@ -66,6 +66,18 @@ class Paths(BaseModel):
     log_file: Optional[str] = None
 
 
+class StaticIPs(BaseModel):
+    rule_prefix: str
+    ips: List[str]
+
+    @field_validator('ips')
+    @classmethod
+    def validate_ips(cls, v):
+        for ip_str in v:
+            ipaddress.ip_address(ip_str)
+        return v
+
+
 class Config(BaseModel):
     huawei: Optional[CloudProvider] = None
     tencent: Optional[CloudProvider] = None
@@ -75,15 +87,7 @@ class Config(BaseModel):
     check_interval: int = 600
     paths: Paths = Paths()
     rule_prefix: str = "from Wulihe"
-    ips: Optional[List[str]] = None
-
-    @field_validator('ips')
-    @classmethod
-    def validate_ips(cls, v):
-        if v is not None:
-            for ip_str in v:
-                ipaddress.ip_address(ip_str)
-        return v
+    static_ips: Optional[StaticIPs] = None
 
     @field_validator('check_interval')
     @classmethod

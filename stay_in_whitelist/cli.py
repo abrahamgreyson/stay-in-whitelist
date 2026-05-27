@@ -132,8 +132,8 @@ def apply_static_ips(config):
     """使用静态 IP 列表更新云服务商白名单"""
     try:
         updater = Updater()
-        updater.update_cloud_providers_static_ips(config.ips, config)
-        logger.info(f"静态 IP 白名单更新完成: {config.ips}")
+        updater.update_cloud_providers_static_ips(config.static_ips, config)
+        logger.info(f"静态 IP 白名单更新完成: {config.static_ips.ips}")
     except Exception as e:
         logger.error(f"静态 IP 白名单更新失败: {e}")
 
@@ -167,11 +167,10 @@ def main():
         look_at_rules(config, updater)
         return
 
-    # Static IP mode: when ips is configured (including empty list), bypass auto-detection.
-    # Use "is not None" so that ips: [] triggers reconcile (clean up) rather than auto-detect.
-    if config.ips is not None:
+    # Static IP mode: when static_ips is configured, bypass auto-detection.
+    if config.static_ips is not None:
         if args.debug:
-            logger.info(f"调试模式（静态 IP）：应用 IP 列表 {config.ips}")
+            logger.info(f"调试模式（静态 IP）：应用 IP 列表 {config.static_ips.ips}")
         apply_static_ips(config)
         return
 

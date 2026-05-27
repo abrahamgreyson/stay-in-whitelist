@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import requests
 
 from stay_in_whitelist.cli import has_ip_changed, check_and_update_ip, apply_static_ips
+from stay_in_whitelist.config.config import StaticIPs
 
 
 # ---------------------------------------------------------------------------
@@ -120,7 +121,7 @@ def test_check_and_update_ip_logs_unchanged_when_ip_not_changed(mocker, mock_con
 
 def test_apply_static_ips_calls_updater(mocker, mock_config):
     """apply_static_ips creates Updater and calls update_cloud_providers_static_ips."""
-    mock_config.ips = ['1.2.3.4']
+    mock_config.static_ips = StaticIPs(rule_prefix="Abe", ips=["1.2.3.4"])
     mocker.patch('stay_in_whitelist.cli.logger')
     mock_updater_instance = MagicMock()
     mock_updater_cls = mocker.patch('stay_in_whitelist.cli.Updater', return_value=mock_updater_instance)
@@ -128,12 +129,14 @@ def test_apply_static_ips_calls_updater(mocker, mock_config):
     apply_static_ips(mock_config)
 
     mock_updater_cls.assert_called_once()
-    mock_updater_instance.update_cloud_providers_static_ips.assert_called_once_with(['1.2.3.4'], mock_config)
+    mock_updater_instance.update_cloud_providers_static_ips.assert_called_once_with(
+        mock_config.static_ips, mock_config
+    )
 
 
 def test_apply_static_ips_logs_error_on_exception(mocker, mock_config):
     """apply_static_ips logs error when updater raises exception."""
-    mock_config.ips = ['1.2.3.4']
+    mock_config.static_ips = StaticIPs(rule_prefix="Abe", ips=["1.2.3.4"])
     mock_logger = mocker.patch('stay_in_whitelist.cli.logger')
     mocker.patch('stay_in_whitelist.cli.Updater', side_effect=Exception("cloud error"))
 

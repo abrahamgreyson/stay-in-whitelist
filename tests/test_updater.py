@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch, MagicMock  # noqa: F401
 from stay_in_whitelist.updater import Updater
 from stay_in_whitelist.cloud_providers.tencent_cloud import TencentCloud
 from stay_in_whitelist.cloud_providers.huawei_cloud import HuaweiCloud
-from stay_in_whitelist.config.config import Config, CloudProvider, Region, Rule, Allow
+from stay_in_whitelist.config.config import Config, CloudProvider, Region, Rule, Allow, StaticIPs
 
 
 def test_client_is_instance_variable():
@@ -378,9 +378,10 @@ def test_update_cloud_providers_static_ips_iterates_all(mocker):
             )]
         )
     )
-    updater.update_cloud_providers_static_ips(['10.0.0.1'], config)
+    static_ips = StaticIPs(rule_prefix="Abe", ips=["10.0.0.1"])
+    updater.update_cloud_providers_static_ips(static_ips, config)
     assert updater.reconcile_security_group_rules.call_count == 2
-    updater.set_client.assert_called_with('tencent', 'key1', 'secret1', 'ap-guangzhou', 'from Wulihe')
+    updater.set_client.assert_called_with('tencent', 'key1', 'secret1', 'ap-guangzhou', 'Abe')
 
 
 def test_update_cloud_providers_static_ips_skips_none_providers(mocker):
@@ -395,5 +396,6 @@ def test_update_cloud_providers_static_ips_skips_none_providers(mocker):
             regions=[Region(region='cn-east-3', rules=[Rule(sg='sg-h', allow=[Allow(port=22)])])]
         )
     )
-    updater.update_cloud_providers_static_ips(['1.2.3.4'], config)
+    static_ips = StaticIPs(rule_prefix="Abe", ips=["1.2.3.4"])
+    updater.update_cloud_providers_static_ips(static_ips, config)
     assert updater.reconcile_security_group_rules.call_count == 1

@@ -118,7 +118,7 @@ class Updater:
             assert self.client is not None
             self._call_with_retry(self.client.add_rules, sg, rules, ip)
 
-    def update_cloud_providers_static_ips(self, ips, config):
+    def update_cloud_providers_static_ips(self, static_ips, config):
         """使用静态 IP 列表更新所有云服务商白名单"""
         for provider_name in CLOUD_PROVIDER_FIELDS:
             provider_config = getattr(config, provider_name, None)
@@ -132,8 +132,8 @@ class Updater:
             for region_config in provider_config.regions:
                 region = region_config.region
                 for rule in region_config.rules:
-                    self.set_client(provider_name, access_key, secret_key, region, config.rule_prefix)
-                    self.reconcile_security_group_rules(rule.sg, rule.allow, ips)
+                    self.set_client(provider_name, access_key, secret_key, region, static_ips.rule_prefix)
+                    self.reconcile_security_group_rules(rule.sg, rule.allow, static_ips.ips)
 
     def fetch_security_group_rules(self, sg):
         """

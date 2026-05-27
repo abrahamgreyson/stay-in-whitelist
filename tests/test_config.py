@@ -17,6 +17,7 @@ from stay_in_whitelist.config.config import (
     Paths,
     TimeoutSettings,
     IPInfo,
+    StaticIPs,
     load_config,
 )
 
@@ -167,35 +168,36 @@ class TestRulePrefix:
         assert mock_config.rule_prefix == "from Wulihe"
 
 
-class TestIps:
-    """ips field validation and defaults."""
+class TestStaticIps:
+    """static_ips field validation and defaults."""
 
-    def test_ips_defaults_to_none(self):
-        """Config() defaults ips to None (auto-detect mode)."""
+    def test_static_ips_defaults_to_none(self):
+        """Config() defaults static_ips to None (auto-detect mode)."""
         cfg = Config()
-        assert cfg.ips is None
+        assert cfg.static_ips is None
 
-    def test_ips_accepts_valid_list(self):
-        """Config(ips=['1.2.3.4', '10.0.0.1']) succeeds."""
-        cfg = Config(ips=["1.2.3.4", "10.0.0.1"])
-        assert cfg.ips == ["1.2.3.4", "10.0.0.1"]
+    def test_static_ips_accepts_valid_config(self):
+        """Config with valid static_ips succeeds."""
+        cfg = Config(static_ips=StaticIPs(rule_prefix="Abe", ips=["1.2.3.4", "10.0.0.1"]))
+        assert cfg.static_ips.ips == ["1.2.3.4", "10.0.0.1"]
+        assert cfg.static_ips.rule_prefix == "Abe"
 
-    def test_ips_accepts_empty_list(self):
-        """Config(ips=[]) succeeds — used to clean up all prefix-matching rules."""
-        cfg = Config(ips=[])
-        assert cfg.ips == []
+    def test_static_ips_accepts_empty_list(self):
+        """static_ips with empty ips list — used to clean up all prefix-matching rules."""
+        cfg = Config(static_ips=StaticIPs(rule_prefix="Abe", ips=[]))
+        assert cfg.static_ips.ips == []
 
-    def test_ips_rejects_invalid_ip(self):
-        """Config(ips=['not-an-ip']) raises ValidationError."""
+    def test_static_ips_rejects_invalid_ip(self):
+        """static_ips with invalid IP raises ValidationError."""
         with pytest.raises(ValidationError):
-            Config(ips=["not-an-ip"])
+            StaticIPs(rule_prefix="Abe", ips=["not-an-ip"])
 
-    def test_ips_rejects_invalid_ip_in_list(self):
+    def test_static_ips_rejects_invalid_ip_in_list(self):
         """A single invalid IP in the list causes ValidationError."""
         with pytest.raises(ValidationError):
-            Config(ips=["1.2.3.4", "invalid", "10.0.0.1"])
+            StaticIPs(rule_prefix="Abe", ips=["1.2.3.4", "invalid", "10.0.0.1"])
 
-    def test_ips_accepts_ipv6(self):
+    def test_static_ips_accepts_ipv6(self):
         """IPv6 addresses are also valid."""
-        cfg = Config(ips=["::1", "2001:db8::1"])
-        assert cfg.ips == ["::1", "2001:db8::1"]
+        cfg = Config(static_ips=StaticIPs(rule_prefix="Abe", ips=["::1", "2001:db8::1"]))
+        assert cfg.static_ips.ips == ["::1", "2001:db8::1"]

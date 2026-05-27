@@ -55,20 +55,20 @@ tencent:
               desc: 预留
 
 # Optional: security group rule description prefix (default: "from Wulihe")
-# Change this for dev/prod isolation, e.g., "Abe" for testing
+# Change this for dev/prod isolation, e.g., "from Wulihe-dev" for development
 # Note: changing prefix means existing rules with old prefix become orphaned and must be cleaned up manually
 # rule_prefix: "from Wulihe"
 
 # Optional: static IPs to whitelist (bypasses auto-detection and scheduler entirely)
-# When set, the tool does NOT detect your public IP, does NOT use IP caching,
+# When configured, the tool does NOT detect your public IP, does NOT use IP caching,
 # and does NOT start the periodic scheduler.
-# Set to empty list ips: [] to clean up all prefix-matching rules.
-# Combine with rule_prefix for namespace isolation, e.g.:
+# Static IPs are applied to ALL configured cloud providers with their respective port rules.
+# Set ips to empty list to clean up all prefix-matching rules.
+# static_ips:
 #   rule_prefix: "Abe"
-#   ips: ["203.0.113.50", "198.51.100.10"]
-# ips:
-#   - 203.0.113.50
-#   - 198.51.100.10
+#   ips:
+#     - 203.0.113.50
+#     - 198.51.100.10
 
 # ipinfo
 # 请在 ipinfo.io 申请token
