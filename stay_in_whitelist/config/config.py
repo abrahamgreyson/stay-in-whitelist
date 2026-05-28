@@ -36,10 +36,24 @@ class Region(BaseModel):
     rules: List[Rule]
 
 
+class StaticIPs(BaseModel):
+    rule_prefix: str = "from Abe"
+    ips: List[str]
+    except_ports: List[Union[str, int]] = []
+
+    @field_validator('ips')
+    @classmethod
+    def validate_ips(cls, v):
+        for ip_str in v:
+            ipaddress.ip_address(ip_str)
+        return v
+
+
 class CloudProvider(BaseModel):
     access_key: str
     secret_key: str
     regions: List[Region]
+    static_ips: Optional[StaticIPs] = None
 
 
 class IPInfo(BaseModel):
@@ -66,28 +80,16 @@ class Paths(BaseModel):
     log_file: Optional[str] = None
 
 
-class StaticIPs(BaseModel):
-    rule_prefix: str
-    ips: List[str]
-
-    @field_validator('ips')
-    @classmethod
-    def validate_ips(cls, v):
-        for ip_str in v:
-            ipaddress.ip_address(ip_str)
-        return v
-
-
 class Config(BaseModel):
     huawei: Optional[CloudProvider] = None
     tencent: Optional[CloudProvider] = None
     aliyun: Optional[CloudProvider] = None
+    aliyun_firewall: Optional[CloudProvider] = None
     ipinfo: Optional[IPInfo] = None
     timeouts: TimeoutSettings = TimeoutSettings()
     check_interval: int = 600
     paths: Paths = Paths()
     rule_prefix: str = "from Wulihe"
-    static_ips: Optional[StaticIPs] = None
 
     @field_validator('check_interval')
     @classmethod

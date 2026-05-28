@@ -37,6 +37,10 @@ class TencentCloud(BaseCloudProvider):
             BaseCloudProvider.log(err)
             return []
 
+    def rule_fingerprint(self, rule) -> tuple:
+        ip = rule.get('CidrBlock', '')
+        return (ip.replace('/32', ''), str(rule.get('Port', '')))
+
     def add_rules(self, group_id, rules, ip) -> bool:
         """ 添加安全组规则。成功返回 True；sg 不存在返回 False；其他异常向上传播。 """
         try:
@@ -57,7 +61,6 @@ class TencentCloud(BaseCloudProvider):
             }
             req.from_json_string(json.dumps(params))
             resp = self.client.CreateSecurityGroupPolicies(req)
-            logger.debug(resp.to_json_string())
             return True
         except TencentCloudSDKException as err:
             if err.get_code() == 'InvalidSecurityGroupID.NotFound':
@@ -83,7 +86,6 @@ class TencentCloud(BaseCloudProvider):
             }
             req.from_json_string(json.dumps(params))
             resp = self.client.DeleteSecurityGroupPolicies(req)
-            logger.debug(resp.to_json_string())
         except TencentCloudSDKException as err:
             BaseCloudProvider.log(err)
 

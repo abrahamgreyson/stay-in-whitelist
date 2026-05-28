@@ -19,6 +19,10 @@ logger = get_logger()
 
 class HuaweiCloud(BaseCloudProvider):
 
+    def rule_fingerprint(self, rule) -> tuple:
+        ip = getattr(rule, 'remote_ip_prefix', '') or ''
+        return (ip.replace('/32', ''), str(getattr(rule, 'multiport', '')))
+
     def delete_rules(self, group_id, rules) -> None:
         """
         删除规则
@@ -29,7 +33,6 @@ class HuaweiCloud(BaseCloudProvider):
                 request = DeleteSecurityGroupRuleRequest()
                 request.security_group_rule_id = rule.id
                 response = self.client.delete_security_group_rule(request)
-                logger.debug(response)
         except exceptions.ClientRequestException as e:
             BaseCloudProvider.log(e)
         return None

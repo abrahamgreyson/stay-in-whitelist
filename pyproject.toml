@@ -25,7 +25,10 @@ dependencies = [
     "tenacity~=9.0.0",
     "APScheduler~=3.10.4",
     "tencentcloud_sdk_python_common~=3.0.1174",
-    "tencentcloud_sdk_python_vpc~=3.0.1174"
+    "tencentcloud_sdk_python_vpc~=3.0.1174",
+    "alibabacloud_swas_open20200601~=3.0.4",
+    "alibabacloud_tea_openapi~=0.3.12",
+    "alibabacloud_tea_util~=0.3.13"
 ]
 
 [project.scripts]

@@ -23,59 +23,71 @@
 #               desc: https
 #             - port: 3306
 #               desc: MySQL
+#   # Optional: per-provider static IPs
+#   # static_ips:
+#   #   ips:
+#   #     - 203.0.113.50
 
 # 腾讯云
-tencent:
-  access_key: your_tencent_cloud_access_key
-  secret_key: your_tencent_cloud_secret_key
-  regions:
-    - region: ap-bangkok
-      rules:
-        - sg: your_tencent_security_group_id
-          allow:
-            - port: 22
-              desc: ssh
-            - port: 32560
-              desc: MySQL 5 只读节点
-            - port: 32561
-              desc: MySQL 8 只读节点
-            - port: 32562
-              desc: MySQL 5 主节点
-            - port: 32563
-              desc: MySQL 8 主节点
-            - port: 32564
-              desc: 越南 MySQL
-            - port: 32565
-              desc: 马来 MySQL
-            - port: 32566
-              desc: 斯里兰卡 MySQL
-            - port: 32567
-              desc: 预留
-            - port: 32568
-              desc: 预留
+# tencent:
+#   access_key: your_tencent_cloud_access_key
+#   secret_key: your_tencent_cloud_secret_key
+#   regions:
+#     - region: ap-bangkok
+#       rules:
+#         - sg: your_tencent_security_group_id
+#           allow:
+#             - port: 22
+#               desc: ssh
+#             - port: 32560
+#               desc: MySQL 5 只读节点
+#             - port: 32561
+#               desc: MySQL 8 只读节点
+#             - port: 32562
+#               desc: MySQL 5 主节点
+#             - port: 32563
+#               desc: MySQL 8 主节点
+#   # Optional: per-provider static IPs (additional whitelist alongside dynamic IP)
+#   # static_ips:
+#   #   ips:
+#   #     - 203.0.113.50
+
+# 阿里云轻量服务器防火墙
+# sg 字段填写轻量服务器实例 ID（非安全组 ID）
+# aliyun_firewall:
+#   access_key: your_aliyun_access_key
+#   secret_key: your_aliyun_secret_key
+#   regions:
+#     - region: cn-hongkong
+#       rules:
+#         - sg: your_instance_id
+#           allow:
+#             - port: 22
+#               desc: ssh
+#             - port: 32560
+#               desc: MySQL 5 只读节点
+#             - port: 32561
+#               desc: MySQL 8 只读节点
+#             - port: 32562
+#               desc: MySQL 5 主节点
+#             - port: 32563
+#               desc: MySQL 8 主节点
+#   # static_ips:
+#   #   ips:
+#   #     - 203.0.113.50
+#   #   # Optional: exclude specific ports from static IP rules
+#   #   # except_ports:
+#   #   #   - 22
 
 # Optional: security group rule description prefix (default: "from Wulihe")
-# Change this for dev/prod isolation, e.g., "from Wulihe-dev" for development
-# Note: changing prefix means existing rules with old prefix become orphaned and must be cleaned up manually
 # rule_prefix: "from Wulihe"
-
-# Optional: static IPs to whitelist (bypasses auto-detection and scheduler entirely)
-# When configured, the tool does NOT detect your public IP, does NOT use IP caching,
-# and does NOT start the periodic scheduler.
-# Static IPs are applied to ALL configured cloud providers with their respective port rules.
-# Set ips to empty list to clean up all prefix-matching rules.
-# static_ips:
-#   rule_prefix: "Abe"
-#   ips:
-#     - 203.0.113.50
-#     - 198.51.100.10
 
 # ipinfo
 # 请在 ipinfo.io 申请token
-ipinfo:
-  tokens:
-    - your_ipinfo_token_a
-    - your_ipinfo_token_b
+# ipinfo:
+#   tokens:
+#     - your_ipinfo_token_a
+#     - your_ipinfo_token_b
 
 # Optional: check interval in seconds (default: 600, minimum: 600)
 # check_interval: 600

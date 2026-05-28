@@ -20,6 +20,9 @@ class MockCloudProvider(BaseCloudProvider):
     def get_rules(self, group_id):
         pass
 
+    def rule_fingerprint(self, rule):
+        return ('', '')
+
 
 def test_base_cloud_provider(mocker):
     mock_cloud_provider = MockCloudProvider('access_key', 'secret_key', 'region')

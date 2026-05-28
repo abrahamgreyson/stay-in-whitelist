@@ -169,35 +169,44 @@ class TestRulePrefix:
 
 
 class TestStaticIps:
-    """static_ips field validation and defaults."""
+    """static_ips field validation — now per-provider on CloudProvider."""
 
     def test_static_ips_defaults_to_none(self):
-        """Config() defaults static_ips to None (auto-detect mode)."""
-        cfg = Config()
-        assert cfg.static_ips is None
+        """CloudProvider() defaults static_ips to None."""
+        cp = CloudProvider(access_key='ak', secret_key='sk', regions=[])
+        assert cp.static_ips is None
 
     def test_static_ips_accepts_valid_config(self):
-        """Config with valid static_ips succeeds."""
-        cfg = Config(static_ips=StaticIPs(rule_prefix="Abe", ips=["1.2.3.4", "10.0.0.1"]))
-        assert cfg.static_ips.ips == ["1.2.3.4", "10.0.0.1"]
-        assert cfg.static_ips.rule_prefix == "Abe"
+        """CloudProvider with valid static_ips succeeds."""
+        cp = CloudProvider(
+            access_key='ak', secret_key='sk', regions=[],
+            static_ips=StaticIPs(ips=["1.2.3.4", "10.0.0.1"])
+        )
+        assert cp.static_ips.ips == ["1.2.3.4", "10.0.0.1"]
+        assert cp.static_ips.rule_prefix == "from Abe"
 
     def test_static_ips_accepts_empty_list(self):
         """static_ips with empty ips list — used to clean up all prefix-matching rules."""
-        cfg = Config(static_ips=StaticIPs(rule_prefix="Abe", ips=[]))
-        assert cfg.static_ips.ips == []
+        cp = CloudProvider(
+            access_key='ak', secret_key='sk', regions=[],
+            static_ips=StaticIPs(ips=[])
+        )
+        assert cp.static_ips.ips == []
 
     def test_static_ips_rejects_invalid_ip(self):
         """static_ips with invalid IP raises ValidationError."""
         with pytest.raises(ValidationError):
-            StaticIPs(rule_prefix="Abe", ips=["not-an-ip"])
+            StaticIPs(ips=["not-an-ip"])
 
     def test_static_ips_rejects_invalid_ip_in_list(self):
         """A single invalid IP in the list causes ValidationError."""
         with pytest.raises(ValidationError):
-            StaticIPs(rule_prefix="Abe", ips=["1.2.3.4", "invalid", "10.0.0.1"])
+            StaticIPs(ips=["1.2.3.4", "invalid", "10.0.0.1"])
 
     def test_static_ips_accepts_ipv6(self):
         """IPv6 addresses are also valid."""
-        cfg = Config(static_ips=StaticIPs(rule_prefix="Abe", ips=["::1", "2001:db8::1"]))
-        assert cfg.static_ips.ips == ["::1", "2001:db8::1"]
+        cp = CloudProvider(
+            access_key='ak', secret_key='sk', regions=[],
+            static_ips=StaticIPs(ips=["::1", "2001:db8::1"])
+        )
+        assert cp.static_ips.ips == ["::1", "2001:db8::1"]

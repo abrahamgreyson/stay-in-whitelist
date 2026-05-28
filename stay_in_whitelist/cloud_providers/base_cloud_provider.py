@@ -64,6 +64,12 @@ class BaseCloudProvider(ABC):
                 Error code: {e.get_code()}
                 Error message: {e.get_message()}
                 """
+        # 阿里云
+        elif hasattr(e, 'code') and hasattr(e, 'message') and hasattr(e, 'data'):
+            error_message = f"""
+                Error code: {e.code}
+                Error message: {e.message}
+                """
 
         logger.error(error_message.strip())
 
@@ -96,6 +102,14 @@ class BaseCloudProvider(ABC):
         添加安全组规则。
         返回 True 表示规则写入成功；返回 False 表示无需写入（如 409 规则已存在、404 安全组不存在）。
         其他异常向上传播。
+        """
+        pass
+
+    @abstractmethod
+    def rule_fingerprint(self, rule) -> tuple:
+        """
+        从规则对象提取 (ip, port) 元组，用于幂等性比较。
+        IP 不含 /32 后缀。
         """
         pass
 

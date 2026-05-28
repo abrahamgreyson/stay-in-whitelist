@@ -128,16 +128,6 @@ def look_at_rules(config, updater):
                 print(separator)
 
 
-def apply_static_ips(config):
-    """使用静态 IP 列表更新云服务商白名单"""
-    try:
-        updater = Updater()
-        updater.update_cloud_providers_static_ips(config.static_ips, config)
-        logger.info(f"静态 IP 白名单更新完成: {config.static_ips.ips}")
-    except Exception as e:
-        logger.error(f"静态 IP 白名单更新失败: {e}")
-
-
 def main():
     """
     启动定时任务
@@ -168,11 +158,7 @@ def main():
         return
 
     # Static IP mode: when static_ips is configured, bypass auto-detection.
-    if config.static_ips is not None:
-        if args.debug:
-            logger.info(f"调试模式（静态 IP）：应用 IP 列表 {config.static_ips.ips}")
-        apply_static_ips(config)
-        return
+    # (Removed - static_ips is now per-provider, handled inside update_cloud_providers)
 
     # Force mode: clear IP cache to trigger update
     if args.force:
