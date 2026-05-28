@@ -12,10 +12,11 @@
 
 ## 功能特性
 
-- **多云支持** -- 华为云、腾讯云，可扩展其他云服务
+- **多云支持** -- 华为云、腾讯云、阿里云（轻量服务器防火墙）
+- **Per-provider 静态 IP** -- 每个 Provider 独立配置固定 IP 白名单，支持 `except_ports` 排除端口
+- **幂等更新** -- 基于 `(IP, port)` 指纹比较，重复运行不产生副作用
 - **多层级配置** -- 每个云支持多个 region，每个 region 支持多个安全组，每个安全组支持多个端口
 - **IP 探测降级链** -- ipinfo -> icanhazip -> ipify -> ifconfig.me，自动切换可用源
-- **可配置规则前缀** -- 支持 dev/prod 环境隔离，默认 `from Wulihe`
 - **先加后删更新策略** -- 避免规则清空导致用户被锁死
 - **云 API 重试** -- 网络超时自动指数退避重试
 - **systemd 长期运行** -- 开机自启，异常自动恢复
@@ -46,25 +47,15 @@ cp config.example.yaml config.yaml
 # 安装后直接运行（推荐）
 stay-in-whitelist
 
-# 或通过模块方式运行
-python -m stay_in_whitelist
-
-# 或传统方式
-python main.py
-
 # 调试模式：跳过定时器，执行一次检查后退出
 stay-in-whitelist --debug
 
 # 强制更新：清空 IP 缓存，强制触发白名单更新
 stay-in-whitelist --force
 
-# 后台运行
-nohup stay-in-whitelist > /dev/null 2>&1 &
+# 查看模式：打印所有安全组现有规则后退出
+stay-in-whitelist --look
 ```
-
-**运行模式说明：**
-- **正常模式**：启动后打印 `Stay in Whitelist 已启动，每 600 秒检查一次 IP 变化`，然后进入定时调度循环
-- **调试模式** (`--debug`)：跳过定时器，立即执行一次 IP 检查和白名单更新后退出，适合开发调试和首次验证配置
 
 ## 配置说明
 
@@ -92,8 +83,6 @@ nohup stay-in-whitelist > /dev/null 2>&1 &
 }
 ```
 
-使用的 VPC 接口：`ListSecurityGroupRule`、`DeleteSecurityGroupRule`、`BatchCreateSecurityGroupRules`。
-
 #### 腾讯云
 
 在[访问管理](https://console.cloud.tencent.com/cam/overview) 中创建用户，获取 `SecretId` 和 `SecretKey`，赋予以下权限：
@@ -115,7 +104,34 @@ nohup stay-in-whitelist > /dev/null 2>&1 &
 }
 ```
 
-使用的接口：`DescribeSecurityGroupPolicies`、`DeleteSecurityGroupPolicies`、`CreateSecurityGroupPolicies`。
+#### 阿里云（轻量服务器防火墙）
+
+在 [RAM 访问控制](https://ram.console.aliyun.com/) 中创建用户，获取 `AccessKeyId` 和 `AccessKeySecret`，赋予 `AliyunSWASFullAccess` 权限。
+
+`sg` 字段填写**轻量服务器实例 ID**（非安全组 ID），`region` 填写实例所在地域如 `cn-hongkong`。
+
+使用的接口：`ListFirewallRules`、`CreateFirewallRules`、`DeleteFirewallRules`。
+
+### 静态 IP 白名单
+
+每个 Provider 可独立配置静态 IP，与动态 IP（from Wulihe）共存：
+
+```yaml
+tencent:
+  access_key: ...
+  secret_key: ...
+  regions: [...]
+  static_ips:
+    ips:
+      - 203.0.113.50
+      - 203.0.113.51
+    except_ports:    # 可选，排除不需要静态 IP 访问的端口
+      - 22
+```
+
+- `ips`: 固定 IP 列表，以 `from Abe` 为前缀写入规则
+- `except_ports`: 排除端口列表，仅影响静态 IP 规则，不影响动态 IP 规则
+- 注释掉整段 `static_ips` 会自动清理残留的 `from Abe` 规则
 
 ### IP 探测
 
@@ -125,193 +141,88 @@ ipinfo:
     - your_ipinfo_token
 ```
 
-推荐在 [ipinfo.io](https://ipinfo.io) 申请 token 以获得更高的请求限额。如果未配置 token，工具会自动跳过 ipinfo，使用其他免费 IP 探测源（icanhazip、ipify、ifconfig.me）。
+推荐在 [ipinfo.io](https://ipinfo.io) 申请 token 以获得更高的请求限额。未配置时自动使用其他免费源。
 
 ### 高级配置
 
-#### 检查间隔
-
 ```yaml
-check_interval: 600  # 默认 600 秒（10 分钟），最小 600 秒
-```
+# 规则前缀（默认 "from Wulihe"，仅管理匹配此前缀的规则）
+rule_prefix: "from Wulihe"
 
-#### 规则前缀（dev/prod 隔离）
+# 检查间隔（默认 600 秒，最小 600 秒）
+check_interval: 600
 
-```yaml
-rule_prefix: "from Wulihe"  # 默认值
-```
-
-安全组规则的描述前缀。工具只管理匹配此前缀的规则。
-
-**dev/prod 隔离示例：** 如果开发环境和生产环境共用同一个安全组，可以设置不同的前缀（如 `from Wulihe-dev` 和 `from Wulihe-prod`），各自管理各自的规则，互不干扰。
-
-注意：更换前缀后，旧前缀的规则会变成孤儿规则，需要手动清理。
-
-#### 文件路径
-
-```yaml
+# 文件路径
 paths:
-  ip_cache: /var/lib/stay-in-whitelist/ip_cache.txt   # IP 缓存文件路径
-  log_file: /var/log/stay-in-whitelist/stay_in_whitelist.log  # 日志文件路径
-```
+  ip_cache: /var/lib/stay-in-whitelist/ip_cache.txt
+  log_file: /var/log/stay-in-whitelist/stay_in_whitelist.log
 
-默认情况下，缓存文件和日志文件存放在项目目录下。systemd 部署建议使用绝对路径。
-
-#### 超时设置
-
-```yaml
+# 超时设置
 timeouts:
   ip_detection:
-    connect: 3   # 连接超时（秒）
-    read: 5      # 读取超时（秒）
+    connect: 3
+    read: 5
   cloud_api:
-    connect: 3   # 连接超时（秒）
-    read: 10     # 读取超时（秒）
+    connect: 3
+    read: 10
 ```
-
-大多数情况下不需要调整。
 
 ## 部署 (Deployment)
 
 ### systemd 服务配置
 
-Stay in Whitelist 可以作为 systemd 服务长期运行，实现开机自启动和故障自动恢复。
-
-#### 1. 安装服务
-
 ```bash
-# 复制服务模板到 systemd 目录
+# 复制服务模板
 sudo cp stay-in-whitelist.service /etc/systemd/system/
 
-# 编辑服务文件，自定义路径（重要！）
+# 编辑路径（修改 WorkingDirectory 和 ExecStart 为实际路径）
 sudo nano /etc/systemd/system/stay-in-whitelist.service
-```
 
-#### 2. 自定义路径
-
-在服务文件中修改以下路径为实际部署位置：
-
-```ini
-[Service]
-# 修改为项目实际路径
-WorkingDirectory=/opt/stay-in-whitelist
-ExecStart=/opt/stay-in-whitelist/.venv/bin/stay-in-whitelist
-```
-
-**注意：** 不要设置 `StandardOutput`/`StandardError` 重定向到日志文件。脚本已通过 Python 的 `TimedRotatingFileHandler` 直接写文件，若同时让 systemd 捕获 stdout 追加到同一文件，每条日志会重复出现两次。实时查看日志请用 `journalctl -u stay-in-whitelist -f`。
-
-**路径说明：**
-- `WorkingDirectory`: 项目根目录，包含 config.yaml
-- `ExecStart`: 虚拟环境中的 stay-in-whitelist 入口（`.venv/bin/stay-in-whitelist`）
-- `StandardOutput`/`StandardError`: 日志文件路径，需确保有写入权限
-
-#### 3. 启动服务
-
-```bash
-# 重新加载 systemd 配置
+# 启动
 sudo systemctl daemon-reload
-
-# 启用开机自启动
-sudo systemctl enable stay-in-whitelist
-
-# 启动服务
-sudo systemctl start stay-in-whitelist
-
-# 查看服务状态
-sudo systemctl status stay-in-whitelist
+sudo systemctl enable --now stay-in-whitelist
 ```
 
-#### 4. 服务管理
-
-```bash
-# 查看实时日志
-sudo journalctl -u stay-in-whitelist -f
-
-# 查看最近 100 行日志
-sudo journalctl -u stay-in-whitelist -n 100
-
-# 停止服务
-sudo systemctl stop stay-in-whitelist
-
-# 重启服务
-sudo systemctl restart stay-in-whitelist
-
-# 禁用开机自启动
-sudo systemctl disable stay-in-whitelist
-```
+**注意：** 不要设置 `StandardOutput`/`StandardError` 重定向到日志文件，脚本已通过 `TimedRotatingFileHandler` 直接写文件，重复重定向会导致日志双倍。
 
 ### 日志管理
 
-服务运行后，日志文件位于项目根目录的 `stay_in_whitelist.log`。
-
-**日志轮转配置：**
-- 每日午夜自动轮转
-- 保留最近 30 天的日志文件
-- 旧日志自动删除，避免磁盘占用过多
-
-**查看日志文件：**
-```bash
-# 查看当前日志
-tail -f stay_in_whitelist.log
-
-# 查看历史日志（轮转后的备份）
-ls -lh stay_in_whitelist.log*
-```
-
-### 故障排查
-
-**服务无法启动：**
-1. 检查路径配置是否正确（WorkingDirectory、ExecStart）
-2. 检查 Python 虚拟环境是否存在：`ls venv/bin/python`
-3. 检查 config.yaml 是否存在且格式正确
-4. 查看详细错误日志：`sudo journalctl -u stay-in-whitelist -n 50`
-
-**IP 检测失败：**
-1. 检查网络连接：`ping ipinfo.io`
-2. 检查 config.yaml 中的 IP 检测服务配置
-3. 查看日志中的错误信息
-
-**云服务白名单未更新：**
-1. 检查 config.yaml 中的云服务凭证是否正确
-2. 检查安全组 ID 和区域配置
-3. 确认 rule_prefix 配置正确（默认 "from Wulihe"）
-4. 查看日志中的 API 调用结果
-
-**日志文件过大：**
-- 日志会自动轮转，保留最近 30 天
-- 如果需要手动清理：`rm stay_in_whitelist.log.[N]`（N > 30）
-- 检查日志轮转是否正常：`ls -lh stay_in_whitelist.log*`
+- 日志文件：项目根目录 `stay_in_whitelist.log`
+- 每日午夜轮转，保留 30 天
+- 实时查看：`journalctl -u stay-in-whitelist -f` 或 `tail -f stay_in_whitelist.log`
 
 ## 架构
 
 ```
-main.py                     # 入口：APScheduler 定时调度
 stay_in_whitelist/
-  config/config.py          # Pydantic 配置模型 + load_config()
-  ip_fetcher.py             # IP 探测（多 provider 降级链）
-  updater.py                # 编排层：遍历云/region/安全组，委托给 provider
-  logger.py                 # 日志（控制台 + 轮转文件）
+  cli.py                     # CLI 入口（--debug / --force / --look）
+  config/config.py           # Pydantic 配置模型 + load_config()
+  ip_fetcher.py              # IP 探测（多 provider 降级链）
+  updater.py                 # 编排层：遍历云/region/安全组，委托给 provider
+  logger.py                  # 日志（控制台 + 轮转文件）
   cloud_providers/
-    base_cloud_provider.py  # 抽象基类（策略模式）
-    huawei_cloud.py         # 华为云实现
-    tencent_cloud.py        # 腾讯云实现
+    base_cloud_provider.py   # 抽象基类（策略模式）
+    huawei_cloud.py          # 华为云
+    tencent_cloud.py         # 腾讯云
+    aliyun_swas_firewall.py  # 阿里云轻量服务器防火墙
 ```
 
 ### 核心流程
 
-1. **定时轮询** -- APScheduler 每隔 `check_interval` 秒触发一次检查
-2. **IP 探测** -- 按 ipinfo -> icanhazip -> ipify -> ifconfig.me 顺序尝试，返回第一个有效 IP
-3. **变化检测** -- 将当前 IP 与 `ip_cache.txt` 中的缓存 IP 对比
-4. **规则更新** -- IP 变化时，遍历配置的云服务商/region/安全组，**先添加新规则再删除旧规则**，避免中间断档
+1. **定时轮询** -- APScheduler 每隔 `check_interval` 秒触发
+2. **IP 探测** -- 按 ipinfo -> icanhazip -> ipify -> ifconfig.me 降级
+3. **变化检测** -- 当前 IP 与缓存对比
+4. **规则更新** -- 基于 `(IP, port)` 指纹比较，跳过未变化的规则；变化时先添加后删除旧规则
 
 ### 策略模式
 
 云服务提供商继承 `BaseCloudProvider`，实现统一接口：
 
 - `initialize_client()` -- 初始化 SDK 客户端
-- `get_rules()` -- 获取安全组规则（失败返回空列表）
-- `add_rules()` -- 添加安全组规则
-- `delete_rules()` -- 删除安全组规则
+- `get_rules()` -- 获取安全组规则
+- `add_rules()` -- 添加规则
+- `delete_rules()` -- 删除规则
+- `rule_fingerprint()` -- 提取 `(ip, port)` 用于幂等比较
 
 扩展其他云服务时，在 `stay_in_whitelist/cloud_providers/` 目录下新增实现即可。
 
@@ -325,27 +236,15 @@ stay_in_whitelist/
 | 日志文件 | `update_whitelist.log` | `stay_in_whitelist.log` |
 | 项目名 | update-whitelist | Stay in Whitelist |
 
-**注意事项：**
-
-- `config.yaml` 的字段名没有变化，现有配置文件可以直接使用
-- 旧的 `ip_cache.txt` 格式不变，可以继续使用
-- 旧日志文件 `update_whitelist.log` 不会自动迁移，可手动删除或归档
-- 安全组中的旧规则描述前缀（如 `from Wulihe`）不受影响，工具会继续管理匹配的规则
-
 ## 开发
 
 ```bash
-# 安装开发依赖
 pip install -e ".[dev]"
-
-# 运行测试
 pytest
-
-# 带覆盖率报告
 pytest --cov=stay_in_whitelist
 ```
 
-Python 版本支持：3.9、3.10、3.11、3.12、3.13、3.14。
+Python 版本支持：3.9、3.10、3.11、3.12、3.13。
 
 ## 许可证
 
