@@ -68,6 +68,18 @@ class Updater:
                             if self.client is None:
                                 continue
                             self.reconcile_security_group_rules(rule.sg, filtered_allows, provider_config.static_ips.ips)
+                else:
+                    # 未配置 static_ips，清理残留的静态 IP 规则
+                    for region_config in provider_config.regions:
+                        region = region_config.region
+                        for rule in region_config.rules:
+                            self.set_client(provider_name, access_key, secret_key, region, "from Abe")
+                            if self.client is None:
+                                continue
+                            existed = self.fetch_security_group_rules(rule.sg)
+                            if existed:
+                                logger.info(f"清理安全组 {rule.sg} 的 {len(existed)} 条残留静态规则...")
+                                self._call_with_retry(self.client.delete_rules, rule.sg, existed)
 
                 # Step 2: 动态 IP 规则（from Wulihe）
                 for region_config in provider_config.regions:

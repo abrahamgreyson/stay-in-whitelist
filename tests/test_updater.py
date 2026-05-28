@@ -25,6 +25,7 @@ def test_update_cloud_providers_uses_attributes(mocker):
     """update_cloud_providers iterates Pydantic Config attributes, not dict."""
     mocker.patch.object(Updater, 'set_client')
     mocker.patch.object(Updater, 'update_security_group_rules')
+    mocker.patch.object(Updater, 'fetch_security_group_rules', return_value=[])
     updater = Updater()
     updater.client = Mock()
     config = Config(
@@ -38,14 +39,16 @@ def test_update_cloud_providers_uses_attributes(mocker):
         )
     )
     updater.update_cloud_providers('127.0.0.1', config)
-    updater.set_client.assert_called_once_with('tencent', 'key1', 'secret1', 'region1', 'from Wulihe')
     updater.update_security_group_rules.assert_called_once_with('sg1', config.tencent.regions[0].rules[0].allow, '127.0.0.1')
+    # set_client called twice: once for static cleanup, once for dynamic
+    assert updater.set_client.call_count == 2
 
 
 def test_update_cloud_providers_skips_none_providers(mocker):
     """Providers set to None are skipped."""
     mocker.patch.object(Updater, 'set_client')
     mocker.patch.object(Updater, 'update_security_group_rules')
+    mocker.patch.object(Updater, 'fetch_security_group_rules', return_value=[])
     updater = Updater()
     config = Config(
         huawei=CloudProvider(
@@ -59,13 +62,14 @@ def test_update_cloud_providers_skips_none_providers(mocker):
         # tencent and aliyun are None by default
     )
     updater.update_cloud_providers('1.2.3.4', config)
-    updater.set_client.assert_called_once_with('huawei', 'hk1', 'hs1', 'cn-north', 'from Wulihe')
+    assert updater.set_client.call_count == 2
 
 
 def test_update_cloud_providers_skips_non_provider_fields(mocker):
     """Non-provider fields like ipinfo, timeouts are not iterated as providers."""
     mocker.patch.object(Updater, 'set_client')
     mocker.patch.object(Updater, 'update_security_group_rules')
+    mocker.patch.object(Updater, 'fetch_security_group_rules', return_value=[])
     updater = Updater()
     config = Config(
         tencent=CloudProvider(
@@ -78,9 +82,8 @@ def test_update_cloud_providers_skips_non_provider_fields(mocker):
         )
     )
     updater.update_cloud_providers('10.0.0.1', config)
-    # Only tencent should be called, not ipinfo/timeouts
-    assert updater.set_client.call_count == 1
-    updater.set_client.assert_called_once_with('tencent', 'tk', 'ts', 'ap-guangzhou', 'from Wulihe')
+    # set_client called twice: static cleanup + dynamic
+    assert updater.set_client.call_count == 2
 
 
 def test_update_security_group_rules_with_existed_rules(mocker):
@@ -395,6 +398,8 @@ def test_update_cloud_providers_no_static_ips_skips_reconcile(mocker):
     mocker.patch.object(Updater, 'set_client')
     mocker.patch.object(Updater, 'update_security_group_rules')
     mocker.patch.object(Updater, 'reconcile_security_group_rules')
+    mocker.patch.object(Updater, 'fetch_security_group_rules', return_value=[])
+    mocker.patch.object(Updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
     updater = Updater()
     updater.client = Mock()
     config = Config(
@@ -462,6 +467,54 @@ def test_update_cloud_providers_except_ports_all_skips_reconcile(mocker):
     )
     updater.update_cloud_providers('1.2.3.4', config)
     updater.reconcile_security_group_rules.assert_not_called()
+
+
+def test_update_cloud_providers_cleans_stale_static_when_not_configured(mocker):
+    """When static_ips is not configured, orphaned 'from Abe' rules are cleaned up."""
+    mocker.patch.object(Updater, 'set_client')
+    mocker.patch.object(Updater, 'update_security_group_rules')
+    mock_fetch = mocker.patch.object(Updater, 'fetch_security_group_rules', return_value=['old_abe_rule'])
+    mock_retry = mocker.patch.object(Updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater = Updater()
+    updater.client = Mock()
+    config = Config(
+        tencent=CloudProvider(
+            access_key='key1',
+            secret_key='secret1',
+            regions=[Region(
+                region='ap-guangzhou',
+                rules=[Rule(sg='sg-t1', allow=[Allow(port=80)])]
+            )]
+        )
+    )
+    updater.update_cloud_providers('1.2.3.4', config)
+    # Should clean up stale static rules with "from Abe" prefix
+    updater.set_client.assert_any_call('tencent', 'key1', 'secret1', 'ap-guangzhou', 'from Abe')
+    updater.client.delete_rules.assert_called_once_with('sg-t1', ['old_abe_rule'])
+
+
+def test_update_cloud_providers_no_cleanup_when_no_stale_rules(mocker):
+    """When static_ips is not configured and no stale rules exist, no delete is called."""
+    mocker.patch.object(Updater, 'set_client')
+    mocker.patch.object(Updater, 'update_security_group_rules')
+    mocker.patch.object(Updater, 'fetch_security_group_rules', return_value=[])
+    mocker.patch.object(Updater, '_call_with_retry', side_effect=lambda fn, *a, **kw: fn(*a, **kw))
+    updater = Updater()
+    updater.client = Mock()
+    config = Config(
+        tencent=CloudProvider(
+            access_key='key1',
+            secret_key='secret1',
+            regions=[Region(
+                region='ap-guangzhou',
+                rules=[Rule(sg='sg-t1', allow=[Allow(port=80)])]
+            )]
+        )
+    )
+    updater.update_cloud_providers('1.2.3.4', config)
+    updater.client.delete_rules.assert_not_called()
+
+
 # --- aliyun / aliyun_firewall tests ---
 
 
